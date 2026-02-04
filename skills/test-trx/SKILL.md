@@ -1,9 +1,5 @@
 ---
-name: test-trx
 description: Runs .NET tests using dotnet test and collects results to a TRX log file. Use when you need machine-readable test results, CI/CD integration, or detailed test failure analysis.
-metadata:
-  author: dotnet
-  version: "1.0"
 ---
 
 # Test with TRX Output
