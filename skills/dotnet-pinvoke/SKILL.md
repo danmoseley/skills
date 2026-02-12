@@ -436,7 +436,7 @@ dotnet add package Microsoft.Windows.CsWinRT
 - [ ] Struct layout matches native (packing, alignment, field order)
 - [ ] `CLong`/`CULong` used for C `long`/`unsigned long` in cross-platform code
 - [ ] If using `CLong`/`CULong` with `LibraryImport`, `[assembly: DisableRuntimeMarshalling]` is applied
-- [ ] No `bool` without explicit `MarshalAs`
+- [ ] No `bool` without explicit `MarshalAs` (unless `DisableRuntimeMarshalling` is applied, where `bool` is blittable as 1 byte and `MarshalAs` is unnecessary)
 
 ### Runnable validation steps
 
