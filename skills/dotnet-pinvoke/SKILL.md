@@ -107,6 +107,20 @@ Calling conventions only need to be specified when targeting Windows x86 (32-bit
 [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
 ```
 
+If the managed method name differs from the native export name, specify `EntryPoint` to avoid `EntryPointNotFoundException`:
+
+```csharp
+// DllImport
+[DllImport("mylib", EntryPoint = "process_records")]
+private static extern int ProcessRecords(
+    [In] Record[] records, nuint count, out uint outProcessed);
+
+// LibraryImport
+[LibraryImport("mylib", EntryPoint = "process_records")]
+internal static partial int ProcessRecords(
+    [In] Record[] records, nuint count, out uint outProcessed);
+```
+
 ### Step 4: Handle Strings Correctly
 
 1. **Know what encoding the native function expects.** There is no safe default.
