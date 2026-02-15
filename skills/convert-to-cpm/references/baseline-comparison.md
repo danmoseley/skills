@@ -1,40 +1,25 @@
-# Binlog Comparison
+# Baseline Comparison
 
-MSBuild binary logs (binlogs) capture the full structured build event stream, including every resolved package reference and version per project. Use binlogs to produce a verifiable before/after comparison of the CPM conversion.
+Verify the CPM conversion is version-neutral by comparing resolved package versions before and after conversion using `dotnet list package`. Binlogs are also captured as artifacts for manual inspection or troubleshooting.
 
-## Producing binlogs
+## Capturing package lists
 
-Use the `-bl` flag with a named output file. Always build from a clean state to ensure the log reflects a full resolution, not incremental cache.
+Use `dotnet list package` to snapshot resolved versions. Always build from a clean state first to ensure accurate resolution.
 
-### Baseline (before conversion)
+### Baseline (before conversion, step 2)
 
 ```bash
 dotnet clean
 dotnet build -bl:baseline.binlog
+dotnet list package --format json > baseline-packages.json
 ```
 
-### Post-conversion (after all changes)
+### Post-conversion (after all changes, step 8)
 
 ```bash
 dotnet clean
 dotnet build -bl:after-cpm.binlog
-```
-
-For solution-scoped conversions, pass the solution file:
-
-```bash
-dotnet clean MySolution.sln
-dotnet build MySolution.sln -bl:baseline.binlog
-```
-
-## Comparing package versions
-
-Use `dotnet list package` to capture the resolved package versions before and after conversion. This provides a concrete, tool-based comparison without requiring binlog parsing libraries.
-
-### Capture baseline (before conversion, after step 2 baseline build)
-
-```bash
-dotnet list package --format json > baseline-packages.json
+dotnet list package --format json > after-cpm-packages.json
 ```
 
 If `--format json` is not available (requires .NET 8 SDK+), use the default tabular output:
@@ -43,21 +28,11 @@ If `--format json` is not available (requires .NET 8 SDK+), use the default tabu
 dotnet list package > baseline-packages.txt
 ```
 
-For solution-scoped conversions:
+For solution-scoped conversions, pass the solution file to all commands.
 
-```bash
-dotnet list MySolution.sln package --format json > baseline-packages.json
-```
+## Producing the comparison
 
-### Capture post-conversion (after step 8 clean build)
-
-```bash
-dotnet list package --format json > after-cpm-packages.json
-```
-
-### Produce the comparison
-
-Compare the baseline and post-conversion package lists per project. For each project, identify:
+Compare `baseline-packages.json` and `after-cpm-packages.json` per project. For each project, identify:
 
 1. **Version changes**: Packages whose resolved version differs.
 2. **Added packages**: Packages present after conversion but not in the baseline.
@@ -96,19 +71,17 @@ Then present all packages that resolved to the same version, confirming version-
 
 If there are no changes at all, state that the conversion is fully version-neutral.
 
-## Artifacts for the user
+## Binlog artifacts
 
-After comparison, inform the user that the binlog files are available for manual review:
+MSBuild binary logs (binlogs) capture the full structured build event stream, including every resolved package reference, property evaluation, and target execution. They are produced alongside the package list captures as supplementary artifacts. Inform the user they are available for manual review:
 
 - `baseline.binlog` — Build state before CPM conversion
 - `after-cpm.binlog` — Build state after CPM conversion
 
 These can be opened in the [MSBuild Structured Log Viewer](https://msbuildlog.com/) for detailed inspection of the full build tree, including target execution, property evaluation, and item resolution.
 
-If the user's environment does not have the viewer installed, it can be obtained via:
-
 ```bash
-# Windows
+# Install the viewer on Windows
 winget install KirillOsenkov.MSBuildStructuredLogViewer
 
 # Or download from https://msbuildlog.com/
@@ -116,7 +89,7 @@ winget install KirillOsenkov.MSBuildStructuredLogViewer
 
 ## When comparison reveals unexpected differences
 
-If the post-conversion build resolves different package versions than expected (beyond intentional changes like security bumps or `VersionOverride`), investigate:
+If the post-conversion package list resolves different versions than expected (beyond intentional changes like security fixes or `VersionOverride`), investigate:
 
 - Missing `<PackageVersion>` entries causing fallback behavior
 - Conditional `<PackageVersion>` entries not matching the project's target framework
@@ -124,4 +97,4 @@ If the post-conversion build resolves different package versions than expected (
 - Transitive dependency resolution differences from version alignment
 - Packages unexpectedly added or removed due to conditional ItemGroup changes
 
-Flag any unexpected differences to the user before considering the conversion complete.
+The binlogs can help diagnose these issues by showing the full MSBuild evaluation and package resolution. Flag any unexpected differences to the user before considering the conversion complete.

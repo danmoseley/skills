@@ -2,11 +2,11 @@
 
 ## Placement
 
-- **Repository scope**: Place at the repository root (same directory as `.git`).
+- **Repository scope**: Place at the first common ancestor directory of all in-scope .NET projects. This may not be the repository root — many repos nest source code under `src/` or similar directories.
 - **Solution scope**: Place in the solution directory.
-- **Single project scope**: Default to the project directory. If the project is inside a repository with other projects that may be converted later, ask the user whether to place it at the repository root instead.
+- **Single project scope**: Default to the project directory. If the project is inside a repository with other projects that may be converted later, ask the user where to place it.
 
-Only the nearest `Directory.Packages.props` is evaluated per project.
+Only the nearest `Directory.Packages.props` is evaluated per project. When in doubt about placement, ask the user.
 
 ## Creating the file
 

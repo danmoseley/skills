@@ -23,7 +23,7 @@ Migrate .NET projects from per-project package versioning to NuGet Central Packa
 
 | Input | Required | Description |
 |-------|----------|-------------|
-| Scope | Yes | A project file, solution file, or repository root to convert |
+| Scope | Yes | A project file, solution file, or directory containing .NET projects to convert |
 | Version conflict strategy | No | How to resolve cases where the same package has different versions across projects (default: use highest version) |
 
 ## Workflow
@@ -32,7 +32,7 @@ Migrate .NET projects from per-project package versioning to NuGet Central Packa
 
 - **Single project**: User specifies a `.csproj`, `.fsproj`, or `.vbproj`.
 - **Solution**: User specifies a `.sln` or `.slnx`. List projects with `dotnet sln list`.
-- **Repository root**: No specific file given. Find all project files recursively.
+- **Repository/directory**: No specific file given. Find all project files recursively from the first common ancestor directory of all .NET projects in scope.
 
 If the scope is unclear, ask the user.
 
@@ -95,7 +95,7 @@ If errors occur, see [validation-and-errors.md](references/validation-and-errors
 
 Remove inlined version properties from `Directory.Build.props` or other files, after verifying they have no remaining references. See [msbuild-property-handling.md](references/msbuild-property-handling.md) for cleanup procedure.
 
-### Step 10: Summary and binlog comparison
+### Step 10: Summary and package list comparison
 
 Compare `baseline-packages.json` and `after-cpm-packages.json` to produce a per-project package version diff. Present changes (version bumps, `VersionOverride` entries, added/removed packages) and unchanged packages in separate tables so the user can verify the conversion. See [baseline-comparison.md](references/baseline-comparison.md) for the comparison procedure and table format.
 
@@ -110,7 +110,7 @@ Inform the user that `baseline.binlog` and `after-cpm.binlog` are available for 
 - [ ] Every in-scope `PackageReference` either has no `Version` attribute or uses `VersionOverride`
 - [ ] Every referenced package has a corresponding `PackageVersion` entry
 - [ ] `dotnet restore` and `dotnet build` complete without errors from a clean state
-- [ ] Binlog comparison shows no unexpected version changes
+- [ ] Package list comparison shows no unexpected version changes
 - [ ] No orphaned version properties remain (unless intentionally kept)
 
 ## More Info
