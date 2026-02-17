@@ -52,24 +52,23 @@ Ask clarifying questions if needed:
 
 Guide the user based on their requirements:
 
-- **.NET 8 LTS** (recommended for most cases):
-  - Long-term support through November 2026
-  - Stable and widely deployed
+- **.NET 10 LTS** (recommended for most cases):
+  - Long-term support through November 2027
+  - Current stable release with latest features
   - Full compatibility with `ModelContextProtocol` SDK
-  - Best choice for production services with predictable support lifecycle
+  - Best choice for new production services
 
 - **.NET 9 STS**:
-  - Standard support through May 2026
-  - Latest stable features (file-based apps, improved JSON source generation)
-  - Consider if you need specific .NET 9 features
+  - Standard support through May 2026 (approaching end of support)
+  - Consider only if already deployed and not ready to upgrade
   - Shorter support window than LTS
 
-- **.NET 10 (if available)**:
-  - Next LTS release (expected November 2025)
-  - Consider if project timeline aligns with .NET 10 release
-  - Use preview versions only for experimentation
+- **.NET 8 LTS**:
+  - Long-term support through November 2026
+  - Stable but older LTS release
+  - Consider only if you have specific .NET 8 requirements or constraints
 
-**Decision tree**: Use .NET 8 LTS unless the user has a specific reason to use .NET 9 features or is targeting .NET 10 for long-term projects starting after its release.
+**Decision tree**: Use .NET 10 LTS for new projects. Only use .NET 8 or 9 if you have specific compatibility requirements.
 
 ### Step 3: Scaffold the project
 
@@ -93,7 +92,12 @@ using ModelContextProtocol;
 
 var builder = Host.CreateApplicationBuilder(args);
 
-builder.Logging.AddConsole();
+// Configure logging to stderr (stdout is reserved for JSON-RPC messages)
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole(options => 
+{
+    options.LogToStandardErrorThreshold = LogLevel.Trace;
+});
 
 builder.Services.AddMcpServer(options =>
 {
@@ -158,12 +162,9 @@ await app.RunAsync();
 
 #### Creating a tool:
 
-Tools are defined using classes with attributes:
+Tools are defined using classes with attributes. See [code-examples.md](references/code-examples.md) for complete examples.
 
 ```csharp
-using ModelContextProtocol;
-using System.ComponentModel;
-
 public class CalculatorTool : IMcpTool
 {
     [McpToolMethod("add")]
@@ -173,15 +174,6 @@ public class CalculatorTool : IMcpTool
         [Description("Second number")] int b)
     {
         return Task.FromResult(a + b);
-    }
-
-    [McpToolMethod("multiply")]
-    [Description("Multiplies two numbers")]
-    public Task<int> MultiplyAsync(
-        [Description("First number")] int a,
-        [Description("Second number")] int b)
-    {
-        return Task.FromResult(a * b);
     }
 }
 ```
@@ -195,12 +187,9 @@ Key patterns:
 
 #### Creating a resource:
 
-Resources provide data that agents can read:
+Resources provide data that agents can read. See [code-examples.md](references/code-examples.md) for complete examples.
 
 ```csharp
-using ModelContextProtocol;
-using System.ComponentModel;
-
 public class ConfigResource : IMcpResource
 {
     [McpResourceMethod("config://app/settings")]
@@ -214,18 +203,6 @@ public class ConfigResource : IMcpResource
             Text = "{\"timeout\": 30, \"retries\": 3}"
         });
     }
-
-    [McpResourceMethod("config://app/version")]
-    [Description("Application version information")]
-    public Task<ResourceContents> GetVersionAsync()
-    {
-        return Task.FromResult(new ResourceContents
-        {
-            Uri = "config://app/version",
-            MimeType = "text/plain",
-            Text = "1.0.0"
-        });
-    }
 }
 ```
 
@@ -236,6 +213,8 @@ Key patterns:
 - Use descriptive URI schemes (e.g., `config://`, `data://`, `file://`)
 
 ### Step 5: Add HTTP-specific concerns (if using HTTP transport)
+
+See [code-examples.md](references/code-examples.md) for complete authentication and CORS examples.
 
 #### Authentication:
 
@@ -277,6 +256,8 @@ app.UseCors();
 
 ### Step 6: Test your server
 
+See [code-examples.md](references/code-examples.md) for complete unit and integration test examples.
+
 #### Manual testing (stdio):
 
 1. Build and run:
@@ -312,57 +293,35 @@ app.UseCors();
 
 #### Unit testing tools:
 
-Create a test project and test tools in isolation:
+Test tools in isolation:
 
 ```csharp
-using Xunit;
-
-public class CalculatorToolTests
+[Fact]
+public async Task AddAsync_ShouldReturnSum()
 {
-    [Fact]
-    public async Task AddAsync_ShouldReturnSum()
-    {
-        var tool = new CalculatorTool();
-        var result = await tool.AddAsync(5, 3);
-        Assert.Equal(8, result);
-    }
-
-    [Fact]
-    public async Task MultiplyAsync_ShouldReturnProduct()
-    {
-        var tool = new CalculatorTool();
-        var result = await tool.MultiplyAsync(4, 7);
-        Assert.Equal(28, result);
-    }
+    var tool = new CalculatorTool();
+    var result = await tool.AddAsync(5, 3);
+    Assert.Equal(8, result);
 }
 ```
 
 #### Integration testing:
 
-For integration tests, instantiate the MCP server host and test message handling:
+Test the MCP server host:
 
 ```csharp
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Xunit;
-
-public class McpServerIntegrationTests
+[Fact]
+public async Task Server_ShouldHandleInitialize()
 {
-    [Fact]
-    public async Task Server_ShouldHandleInitialize()
+    var builder = Host.CreateApplicationBuilder();
+    builder.Services.AddMcpServer(options =>
     {
-        var builder = Host.CreateApplicationBuilder();
-        builder.Services.AddMcpServer(options =>
-        {
-            options.ServerInfo = new ServerInfo("test-server", "1.0.0");
-        });
-        
-        var host = builder.Build();
-        
-        // Test that the host starts successfully
-        await host.StartAsync();
-        await host.StopAsync();
-    }
+        options.ServerInfo = new ServerInfo("test-server", "1.0.0");
+    });
+    
+    var host = builder.Build();
+    await host.StartAsync();
+    await host.StopAsync();
 }
 ```
 
@@ -405,6 +364,79 @@ Provide the HTTP endpoint URL to clients:
 - Production: `https://your-domain.com/mcp`
 
 Document any authentication requirements (API keys, OAuth tokens, etc.)
+
+### Step 8: Package and deploy
+
+See [code-examples.md](references/code-examples.md) for complete Docker deployment examples.
+
+#### Publishing a standalone executable:
+
+For distribution, publish as a self-contained executable:
+
+```bash
+# Windows
+dotnet publish -c Release -r win-x64 --self-contained
+
+# macOS (Apple Silicon)
+dotnet publish -c Release -r osx-arm64 --self-contained
+
+# Linux
+dotnet publish -c Release -r linux-x64 --self-contained
+```
+
+The executable will be in `bin/Release/net10.0/{runtime}/publish/`.
+
+#### Publishing with Native AOT (smallest size, fastest startup):
+
+Add to your `.csproj`:
+```xml
+<PropertyGroup>
+  <PublishAot>true</PublishAot>
+</PropertyGroup>
+```
+
+Then publish:
+```bash
+dotnet publish -c Release -r linux-x64
+```
+
+**Note**: Native AOT requires all dependencies to be AOT-compatible. Verify MCP SDK AOT support before using.
+
+#### Container deployment (HTTP servers):
+
+Create a `Dockerfile`:
+
+```dockerfile
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS base
+WORKDIR /app
+EXPOSE 8080
+
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+WORKDIR /src
+COPY ["MyMcpServer.csproj", "./"]
+RUN dotnet restore
+COPY . .
+RUN dotnet publish -c Release -o /app/publish
+
+FROM base AS final
+WORKDIR /app
+COPY --from=build /app/publish .
+ENTRYPOINT ["dotnet", "MyMcpServer.dll"]
+```
+
+Build and run:
+```bash
+docker build -t my-mcp-server .
+docker run -p 8080:8080 my-mcp-server
+```
+
+#### Deployment considerations:
+
+- **stdio servers**: Distribute the published executable and configuration file
+- **HTTP servers**: Deploy to Azure App Service, AWS ECS, Kubernetes, or other container platforms
+- **Environment variables**: Use for configuration (connection strings, API keys) instead of hardcoding
+- **Health checks**: Add `/health` endpoint for container orchestrators
+- **Monitoring**: Configure Application Insights or other APM tools for production observability
 
 ## Validation
 
