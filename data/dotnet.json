@@ -298,6 +298,33 @@
           }
         ],
         "tool": "customBiggerIsBetter"
+      },
+      {
+        "benches": [
+          {
+            "value": 10.0,
+            "name": "csharp-scripts/Test a C# language feature with a script - Skilled Quality",
+            "unit": "Score (0-10)"
+          },
+          {
+            "value": 5.400000095367432,
+            "name": "csharp-scripts/Test a C# language feature with a script - Vanilla Quality",
+            "unit": "Score (0-10)"
+          }
+        ],
+        "commit": {
+          "message": "Re-enable cron and set to every two hours (#71)",
+          "id": "bc3f767ab5f6c748a2c7d01f77e15e7a001a3e2d",
+          "url": "https://github.com/dotnet/skills/commit/bc3f767ab5f6c748a2c7d01f77e15e7a001a3e2d",
+          "author": {
+            "username": "ViktorHofer",
+            "name": "Viktor Hofer"
+          },
+          "timestamp": "2026-02-20T17:13:00+00:00"
+        },
+        "date": 1771612123113,
+        "tool": "customBiggerIsBetter",
+        "model": "claude-opus-4.5"
       }
     ],
     "Efficiency": [
@@ -597,8 +624,35 @@
           }
         ],
         "tool": "customSmallerIsBetter"
+      },
+      {
+        "benches": [
+          {
+            "value": 45.1,
+            "name": "csharp-scripts/Test a C# language feature with a script - Skilled Time",
+            "unit": "seconds"
+          },
+          {
+            "value": 100885.0,
+            "name": "csharp-scripts/Test a C# language feature with a script - Skilled Tokens In",
+            "unit": "tokens"
+          }
+        ],
+        "commit": {
+          "message": "Re-enable cron and set to every two hours (#71)",
+          "id": "bc3f767ab5f6c748a2c7d01f77e15e7a001a3e2d",
+          "url": "https://github.com/dotnet/skills/commit/bc3f767ab5f6c748a2c7d01f77e15e7a001a3e2d",
+          "author": {
+            "username": "ViktorHofer",
+            "name": "Viktor Hofer"
+          },
+          "timestamp": "2026-02-20T17:13:00+00:00"
+        },
+        "date": 1771612123113,
+        "tool": "customSmallerIsBetter",
+        "model": "claude-opus-4.5"
       }
     ]
   },
-  "lastUpdate": 1771581911687
+  "lastUpdate": 1771612123113
 }
