@@ -74,7 +74,7 @@ MSBuild binary logs (binlogs) capture the full structured build event stream, in
 - `baseline.binlog` — Build state before CPM conversion
 - `after-cpm.binlog` — Build state after CPM conversion
 
-These can be opened in the [MSBuild Structured Log Viewer](https://msbuildlog.com/) for detailed inspection of the full build tree, including target execution, property evaluation, and item resolution.
+The user can open these `.binlog` files in the [MSBuild Structured Log Viewer](https://msbuildlog.com/) for detailed inspection of the full build tree, including target execution, property evaluation, and item resolution.
 
 ```bash
 # Install the viewer on Windows
