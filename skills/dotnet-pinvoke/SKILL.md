@@ -192,6 +192,8 @@ Raw `IntPtr` leaks on exceptions and has no double-free protection. `SafeHandle`
 ```csharp
 internal sealed class MyLibHandle : SafeHandleZeroOrMinusOneIsInvalid
 {
+    // Required by the marshalling infrastructure to instantiate the handle.
+    // Do not remove — there are no direct callers.
     private MyLibHandle() : base(ownsHandle: true) { }
 
     [LibraryImport("mylib", StringMarshalling = StringMarshalling.Utf8)]
@@ -279,6 +281,20 @@ public static void EnableLogging(Action<int, string> handler)
 
 If native code stores the function pointer, the delegate **must** stay rooted for its entire lifetime. A collected delegate means a crash.
 
+**`GC.KeepAlive` for short-lived callbacks:** When converting a delegate to a function pointer with `Marshal.GetFunctionPointerForDelegate`, the GC does not track the relationship between the pointer and the delegate. Use `GC.KeepAlive` to prevent collection before the native call completes:
+
+```csharp
+var callback = new LogCallbackDelegate((level, msgPtr) =>
+{
+    string msg = Marshal.PtrToStringUTF8(msgPtr) ?? string.Empty;
+    Console.WriteLine($"[{level}] {msg}");
+});
+
+IntPtr fnPtr = Marshal.GetFunctionPointerForDelegate(callback);
+NativeUsesCallback(fnPtr);
+GC.KeepAlive(callback); // prevent collection — fnPtr does not root the delegate
+```
+
 ---
 
 ## Cross-Platform Library Loading
@@ -350,6 +366,10 @@ dotnet add package Microsoft.Windows.CsWin32
 
 For WinRT interop, use [Microsoft.Windows.CsWinRT](https://github.com/microsoft/CsWinRT) to generate .NET projections from `.winmd` files.
 
+### Objective Sharpie (Objective-C APIs)
+
+For binding Objective-C libraries (macOS/iOS), use [Objective Sharpie](https://learn.microsoft.com/previous-versions/xamarin/cross-platform/macios/binding/objective-sharpie) to generate initial P/Invoke and binding definitions from Objective-C headers.
+
 ---
 
 ## Validation
@@ -366,7 +386,7 @@ For WinRT interop, use [Microsoft.Windows.CsWinRT](https://github.com/microsoft/
 - [ ] Struct layout matches native (packing, alignment, field order)
 - [ ] `CLong`/`CULong` used for C `long`/`unsigned long` in cross-platform code
 - [ ] If using `CLong`/`CULong` with `LibraryImport`, `[assembly: DisableRuntimeMarshalling]` is applied
-- [ ] No `bool` without explicit `MarshalAs` (unless `DisableRuntimeMarshalling` is applied, where `bool` is blittable as 1 byte and `MarshalAs` is unnecessary)
+- [ ] No `bool` without explicit `MarshalAs` — always specify `UnmanagedType.Bool` (4-byte) or `UnmanagedType.U1` (1-byte) to ensure normalization across the language boundary.
 
 ### Runnable validation steps
 
