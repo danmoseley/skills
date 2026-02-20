@@ -11,12 +11,16 @@ on:
 
   workflow_dispatch:
     inputs:
+      components:
+        description: 'Components to evaluate (comma-separated, empty=all with tests)'
+        required: false
+        default: ''
       model:
         description: 'Copilot model to use (e.g. claude-sonnet-4.5)'
         required: false
-        default: ''
+        default: 'claude-opus-4.6'
       runs:
-        description: 'Number of runs per scenario'
+        description: 'Number of runs per test'
         required: false
         type: number
         default: 5
@@ -33,26 +37,51 @@ concurrency:
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   DOTNET_VERSION: '10.0.x'
+  DEFAULT_MODEL: 'claude-opus-4.6'
 
 permissions:
   contents: write
   pull-requests: write
 
 jobs:
+  discover:
+    runs-on: ubuntu-latest
+    outputs:
+      components: ${{ steps.find.outputs.components }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Find components with skills and tests
+        id: find
+        run: |
+          $input = "${{ github.event.inputs.components }}"
+          if ($input) {
+            $components = $input -split ',' | ForEach-Object { $_.Trim() }
+          } else {
+            $components = Get-ChildItem -Path "src" -Directory |
+              Where-Object { (Test-Path (Join-Path $_.FullName "skills")) -and (Test-Path (Join-Path $_.FullName "tests")) } |
+              Select-Object -ExpandProperty Name
+          }
+
+          $json = $components | ConvertTo-Json -Compress
+          if ($components.Count -eq 1) { $json = "[$json]" }
+          Write-Host "Components to evaluate: $json"
+          echo "components=$json" >> $env:GITHUB_OUTPUT
+        shell: pwsh
+
   evaluate:
+    needs: discover
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        component: ${{ fromJson(needs.discover.outputs.components) }}
 
     steps:
       - name: Checkout skills repo
         uses: actions/checkout@v4
-
-      - name: Checkout skill-validator
-        uses: actions/checkout@v4
-        with:
-          repository: adityamandaleeka/skill-validator
-          ref: c0fa5ad93acb67940a457bde5b5c6837e132a278
-          path: .skill-validator
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -65,7 +94,7 @@ jobs:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
       - name: Build skill-validator
-        run: cd .skill-validator && npm ci && npm run build
+        run: cd eng/skill-validator && npm ci && npm run build
 
       - name: Run skill-validator
         if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
@@ -75,8 +104,9 @@ jobs:
           ARGS="--strict --require-evals"
           ARGS="$ARGS --reporter console --reporter json:.skill-validator-results/results.json"
 
-          if [ -n "${{ github.event.inputs.model }}" ]; then
-            ARGS="$ARGS --model ${{ github.event.inputs.model }}"
+          MODEL="${{ github.event.inputs.model || env.DEFAULT_MODEL }}"
+          if [ -n "$MODEL" ]; then
+            ARGS="$ARGS --model $MODEL"
           fi
           if [ -n "${{ github.event.inputs.runs }}" ]; then
             ARGS="$ARGS --runs ${{ github.event.inputs.runs }}"
@@ -85,13 +115,13 @@ jobs:
             ARGS="$ARGS --verbose"
           fi
 
-          node .skill-validator/dist/index.js $ARGS --tests-dir ./src/dotnet/tests ./src/dotnet/skills
+          node eng/skill-validator/dist/index.js $ARGS --tests-dir ./src/${{ matrix.component }}/tests ./src/${{ matrix.component }}/skills
 
       - name: Upload results
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: skill-validator-results
+          name: skill-validator-results-${{ matrix.component }}
           path: .skill-validator-results/
           include-hidden-files: true
           retention-days: 30
@@ -101,14 +131,14 @@ jobs:
         run: |
           RESULTS_DIR=$(ls -d .skill-validator-results/run-* 2>/dev/null | head -1)
           if [ -z "$RESULTS_DIR" ]; then
-            echo "## Skill Validation Results" >> $GITHUB_STEP_SUMMARY
+            echo "## Skill Validation Results — ${{ matrix.component }}" >> $GITHUB_STEP_SUMMARY
             echo "No results found." >> $GITHUB_STEP_SUMMARY
             exit 0
           fi
 
           RESULTS_FILE="$RESULTS_DIR/results.json"
           if [ ! -f "$RESULTS_FILE" ]; then
-            echo "## Skill Validation Results" >> $GITHUB_STEP_SUMMARY
+            echo "## Skill Validation Results — ${{ matrix.component }}" >> $GITHUB_STEP_SUMMARY
             echo "No results.json found." >> $GITHUB_STEP_SUMMARY
             exit 0
           fi
@@ -117,8 +147,8 @@ jobs:
           node -e "
           const fs = require('fs');
           const results = JSON.parse(fs.readFileSync('$RESULTS_FILE', 'utf8'));
-          let md = '## Skill Validation Results\n\n';
-          md += '| Skill | Scenario | Baseline | With Skill | Δ | Verdict |\n';
+          let md = '## Skill Validation Results — ${{ matrix.component }}\n\n';
+          md += '| Skill | Test | Baseline | With Skill | Δ | Verdict |\n';
           md += '|-------|----------|----------|------------|---|--------|\n';
           for (const v of results.verdicts) {
             for (const s of v.scenarios) {
@@ -144,7 +174,7 @@ jobs:
         run: gh pr comment ${{ github.event.pull_request.number }} --body-file .skill-validator-results/summary.md
 
   publish-benchmark:
-    needs: evaluate
+    needs: [discover, evaluate]
     if: github.ref == 'refs/heads/main'
     concurrency:
       group: publish-benchmark-deploy
@@ -158,8 +188,9 @@ jobs:
       - name: Download evaluation artifacts
         uses: actions/download-artifact@v4
         with:
-          name: skill-validator-results
-          path: .skill-validator-results/
+          pattern: skill-validator-results-*
+          path: all-results/
+          merge-multiple: false
 
       - name: Fetch existing benchmark data
         run: |
@@ -182,24 +213,29 @@ jobs:
             author    = @{ name = $commitAuthor; username = "${{ github.actor }}" }
           } | ConvertTo-Json -Compress
 
-          # Find the run results directory
-          $runDir = Get-ChildItem -Path ".skill-validator-results" -Directory -Filter "run-*" | Select-Object -First 1
-          if (-not $runDir) {
-            Write-Warning "No run results found, skipping benchmark generation"
-            exit 0
-          }
+          # Process each component's results
+          $components = '${{ needs.discover.outputs.components }}' | ConvertFrom-Json
+          foreach ($component in $components) {
+            $artifactDir = "all-results/skill-validator-results-$component"
+            $runDir = Get-ChildItem -Path $artifactDir -Directory -Filter "run-*" -ErrorAction SilentlyContinue | Select-Object -First 1
+            if (-not $runDir) {
+              Write-Warning "No run results found for $component, skipping benchmark generation"
+              continue
+            }
 
-          $existingFile = "/tmp/gh-pages/data/dotnet.json"
-          $params = @{
-            ResultsDir    = $runDir.FullName
-            ComponentName = "dotnet"
-            OutputDir     = "/tmp/gh-pages/data"
-            CommitJson    = $commitJson
+            Write-Host "`n=== Generating benchmark data for: $component ==="
+            $existingFile = "/tmp/gh-pages/data/$component.json"
+            $params = @{
+              ResultsDir    = $runDir.FullName
+              ComponentName = $component
+              OutputDir     = "/tmp/gh-pages/data"
+              CommitJson    = $commitJson
+            }
+            if ((Test-Path $existingFile) -and (Get-Content $existingFile -Raw -ErrorAction SilentlyContinue)) {
+              $params.ExistingDataFile = $existingFile
+            }
+            & ./eng/dashboard/generate-benchmark-data.ps1 @params
           }
-          if ((Test-Path $existingFile) -and (Get-Content $existingFile -Raw -ErrorAction SilentlyContinue)) {
-            $params.ExistingDataFile = $existingFile
-          }
-          & ./eng/dashboard/generate-benchmark-data.ps1 @params
 
           # Generate components.json manifest
           $components = Get-ChildItem -Path "/tmp/gh-pages/data" -Filter "*.json" -File -ErrorAction SilentlyContinue |
