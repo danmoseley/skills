@@ -147,7 +147,7 @@ describe("collectMetrics", () => {
       makeEvent("runner.timeout", { message: "Scenario timed out after 120s" }),
     ];
 
-    const result = collectMetrics(events, 120000, "", "/tmp/work");
+    const result = collectMetrics(events, "", 120000, "/tmp/work");
 
     expect(result.timedOut).toBe(true);
     expect(result.errorCount).toBe(1);
@@ -159,7 +159,7 @@ describe("collectMetrics", () => {
       makeEvent("tool.execution_start", { toolName: "bash" }),
     ];
 
-    const result = collectMetrics(events, 5000, "", "/tmp/work");
+    const result = collectMetrics(events, "", 5000, "/tmp/work");
 
     expect(result.timedOut).toBe(false);
     expect(result.errorCount).toBe(0);
@@ -170,7 +170,7 @@ describe("collectMetrics", () => {
       makeEvent("runner.error", { message: "Something went wrong" }),
     ];
 
-    const result = collectMetrics(events, 3000, "", "/tmp/work");
+    const result = collectMetrics(events, "", 3000, "/tmp/work");
 
     expect(result.timedOut).toBe(false);
     expect(result.errorCount).toBe(1);
@@ -182,7 +182,7 @@ describe("collectMetrics", () => {
       makeEvent("runner.timeout", { message: "Scenario timed out after 120s" }),
     ];
 
-    const result = collectMetrics(events, 120000, "", "/tmp/work");
+    const result = collectMetrics(events, "", 120000, "/tmp/work");
 
     expect(result.timedOut).toBe(true);
     expect(result.errorCount).toBe(2);

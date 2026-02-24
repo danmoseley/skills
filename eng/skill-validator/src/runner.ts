@@ -250,11 +250,22 @@ export async function runAgent(options: RunOptions): Promise<RunMetrics> {
     }
   } catch (error) {
     const msg = String(error);
-    events.push({
-      type: msg.includes("timed out") ? "runner.timeout" : "runner.error",
-      timestamp: Date.now(),
-      data: { message: msg },
-    });
+    if (msg.includes("timed out")) {
+      // Timeout: record a dedicated event (the timer fired, no session.error exists)
+      events.push({
+        type: "runner.timeout",
+        timestamp: Date.now(),
+        data: { message: msg },
+      });
+    } else if (!events.some((e) => e.type === "session.error")) {
+      // Only add runner.error when there isn't already a session.error event
+      // (session.error events are recorded by the event handler above)
+      events.push({
+        type: "runner.error",
+        timestamp: Date.now(),
+        data: { message: msg },
+      });
+    }
   }
 
   const wallTimeMs = Date.now() - startTime;
