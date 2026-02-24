@@ -1,2 +1,17 @@
-# TODO: Add evaluation scenarios for binlog-failure-analysis
-scenarios: []
+scenarios:
+  - name: "Diagnose cascading build failures in multi-project solution"
+    prompt: "Build this solution and diagnose all build failures. Identify which errors are root causes versus cascading failures from dependent project build failures. Suggest targeted fixes for each root cause."
+    setup:
+      copy_test_files: true
+    assertions:
+      - type: "output_contains"
+        value: "CS0246"
+      - type: "output_contains"
+        value: "Newtonsoft.Json"
+    rubric:
+      - "Identified CS0246 compiler errors in the Services project for Newtonsoft.Json types (JsonConvert, JObject, Formatting)"
+      - "Correctly determined that the root cause is a missing PackageReference for Newtonsoft.Json in the Services project"
+      - "Recognized that the Api project could not build because its dependency Services failed, demonstrating understanding of the build dependency chain"
+      - "Suggested adding a PackageReference for Newtonsoft.Json to the Services project as the primary fix"
+      - "Performed structured analysis that examines the build dependency chain across projects, identifying which project failures block downstream dependents rather than treating each error in isolation"
+    timeout: 120
