@@ -30,6 +30,40 @@ describe("extractJson", () => {
     const content = '{"key": "a { b } c"}';
     expect(extractJson(content)).toBe('{"key": "a { b } c"}');
   });
+
+  it("skips non-JSON brace groups like C# code", () => {
+    const content = `Here is the code:
+{
+    [LibraryImport("compresslib", EntryPoint = "compress")]
+    internal static partial int Compress(ReadOnlySpan<byte> input);
+}
+
+And here is my evaluation:
+{"rubric_scores": [{"criterion": "Quality", "score": 4, "reasoning": "Good"}], "overall_score": 4, "overall_reasoning": "Solid work"}`;
+    const result = extractJson(content);
+    expect(result).not.toBeNull();
+    const parsed = JSON.parse(result!);
+    expect(parsed.overall_score).toBe(4);
+  });
+
+  it("skips multiple non-JSON brace groups", () => {
+    const content = `{not json} and {also not} but {"valid": true} finally`;
+    const result = extractJson(content);
+    expect(result).toBe('{"valid": true}');
+  });
+
+  it("skips brace group with invalid escapes and finds valid JSON after it", () => {
+    // First group is brace-balanced but has invalid escapes AND structural issues
+    // that can't be fixed by sanitization (missing comma between properties)
+    const content = '{"a\\x": 1 "b": 2} then {"valid": true}';
+    const result = extractJson(content);
+    expect(result).toBe('{"valid": true}');
+  });
+
+  it("returns null when all brace groups are non-JSON", () => {
+    const content = "{not json} and {also not json}";
+    expect(extractJson(content)).toBeNull();
+  });
 });
 
 describe("parseLlmJson", () => {
