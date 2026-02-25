@@ -2033,6 +2033,53 @@
           }
         ],
         "model": "claude-opus-4.6"
+      },
+      {
+        "benches": [
+          {
+            "unit": "Score (0-10)",
+            "value": 9.600000381469727,
+            "name": "csharp-scripts/Test a C# language feature with a script - Skilled Quality"
+          },
+          {
+            "unit": "Score (0-10)",
+            "value": 5.599999904632568,
+            "name": "csharp-scripts/Test a C# language feature with a script - Vanilla Quality"
+          },
+          {
+            "unit": "Score (0-10)",
+            "value": 10.0,
+            "name": "dotnet-pinvoke/Generate LibraryImport declaration from C header (.NET 8+) - Skilled Quality"
+          },
+          {
+            "unit": "Score (0-10)",
+            "value": 9.199999809265137,
+            "name": "dotnet-pinvoke/Generate LibraryImport declaration from C header (.NET 8+) - Vanilla Quality"
+          },
+          {
+            "unit": "Score (0-10)",
+            "value": 10.0,
+            "name": "dotnet-pinvoke/Generate LibraryImport declaration from C header (.NET Framework) - Skilled Quality"
+          },
+          {
+            "unit": "Score (0-10)",
+            "value": 10.0,
+            "name": "dotnet-pinvoke/Generate LibraryImport declaration from C header (.NET Framework) - Vanilla Quality"
+          }
+        ],
+        "tool": "customBiggerIsBetter",
+        "model": "claude-opus-4.6",
+        "date": 1772031339412,
+        "commit": {
+          "url": "https://github.com/dotnet/skills/commit/e381a6afd2ea17836b35ae4b1c21e382c72eb85e",
+          "author": {
+            "name": "Jan Krivanek",
+            "username": "ViktorHofer"
+          },
+          "id": "e381a6afd2ea17836b35ae4b1c21e382c72eb85e",
+          "message": "Fix MCP discovery (#120)",
+          "timestamp": "2026-02-25T13:21:31+00:00"
+        }
       }
     ],
     "Efficiency": [
@@ -4067,8 +4114,55 @@
           }
         ],
         "model": "claude-opus-4.6"
+      },
+      {
+        "benches": [
+          {
+            "unit": "seconds",
+            "value": 43.5,
+            "name": "csharp-scripts/Test a C# language feature with a script - Skilled Time"
+          },
+          {
+            "unit": "tokens",
+            "value": 98990.0,
+            "name": "csharp-scripts/Test a C# language feature with a script - Skilled Tokens In"
+          },
+          {
+            "unit": "seconds",
+            "value": 23.9,
+            "name": "dotnet-pinvoke/Generate LibraryImport declaration from C header (.NET 8+) - Skilled Time"
+          },
+          {
+            "unit": "tokens",
+            "value": 46442.0,
+            "name": "dotnet-pinvoke/Generate LibraryImport declaration from C header (.NET 8+) - Skilled Tokens In"
+          },
+          {
+            "unit": "seconds",
+            "value": 19.6,
+            "name": "dotnet-pinvoke/Generate LibraryImport declaration from C header (.NET Framework) - Skilled Time"
+          },
+          {
+            "unit": "tokens",
+            "value": 28936.0,
+            "name": "dotnet-pinvoke/Generate LibraryImport declaration from C header (.NET Framework) - Skilled Tokens In"
+          }
+        ],
+        "tool": "customSmallerIsBetter",
+        "model": "claude-opus-4.6",
+        "date": 1772031339412,
+        "commit": {
+          "url": "https://github.com/dotnet/skills/commit/e381a6afd2ea17836b35ae4b1c21e382c72eb85e",
+          "author": {
+            "name": "Jan Krivanek",
+            "username": "ViktorHofer"
+          },
+          "id": "e381a6afd2ea17836b35ae4b1c21e382c72eb85e",
+          "message": "Fix MCP discovery (#120)",
+          "timestamp": "2026-02-25T13:21:31+00:00"
+        }
       }
     ]
   },
-  "lastUpdate": 1772023551562
+  "lastUpdate": 1772031339412
 }
