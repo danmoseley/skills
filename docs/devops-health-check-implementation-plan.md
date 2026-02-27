@@ -12,6 +12,7 @@
 2. [Architecture Overview](#2-architecture-overview)
 3. [File Layout](#3-file-layout)
 4. [Workflow Definition: `devops-health-check.md` + `devops-health-investigate.md`](#4-workflow-definition)
+4A. [Token Handling](#4a-token-handling)
 5. [Fingerprinting & Diff Engine](#5-fingerprinting--diff-engine)
 6. [Health Check Catalog](#6-health-check-catalog)
 7. [Output Format](#7-output-format)
@@ -280,7 +281,134 @@ network:
 ---
 ```
 
-### 4.3 Key Design Decisions
+### 4.3 Token Handling {#4a-token-handling}
+
+Both the orchestrator and worker workflows require a **Copilot token** to authenticate LLM requests. The same random-token-selection technique used by the [evaluation workflow](../.github/workflows/evaluation.yml) must be applied here to distribute load across multiple tokens and avoid rate-limit exhaustion.
+
+#### 4.3.1 Existing Pattern (Evaluation Workflow)
+
+The `evaluation.yml` workflow stores **up to 8 Copilot tokens** as repo secrets (`COPILOT_GITHUB_TOKEN`, `COPILOT_GITHUB_TOKEN_2` … `COPILOT_GITHUB_TOKEN_8`) and selects one at random per job run:
+
+```yaml
+- name: Select random Copilot token
+  id: select-token
+  env:
+    TOKEN_1: ${{ secrets.COPILOT_GITHUB_TOKEN }}
+    TOKEN_2: ${{ secrets.COPILOT_GITHUB_TOKEN_2 }}
+    TOKEN_3: ${{ secrets.COPILOT_GITHUB_TOKEN_3 }}
+    TOKEN_4: ${{ secrets.COPILOT_GITHUB_TOKEN_4 }}
+    TOKEN_5: ${{ secrets.COPILOT_GITHUB_TOKEN_5 }}
+    TOKEN_6: ${{ secrets.COPILOT_GITHUB_TOKEN_6 }}
+    TOKEN_7: ${{ secrets.COPILOT_GITHUB_TOKEN_7 }}
+    TOKEN_8: ${{ secrets.COPILOT_GITHUB_TOKEN_8 }}
+  run: |
+    # Collect all non-empty token secrets
+    TOKENS=()
+    NAMES=()
+    for i in 1 2 3 4 5 6 7 8; do
+      var="TOKEN_$i"
+      val="${!var}"
+      if [ -n "$val" ]; then
+        TOKENS+=("$val")
+        if [ "$i" -eq 1 ]; then NAMES+=("COPILOT_GITHUB_TOKEN")
+        else NAMES+=("COPILOT_GITHUB_TOKEN_$i"); fi
+      fi
+    done
+    if [ ${#TOKENS[@]} -eq 0 ]; then
+      echo "::error::No COPILOT_GITHUB_TOKEN secrets are configured"
+      exit 1
+    fi
+    IDX=$((RANDOM % ${#TOKENS[@]}))
+    echo "Selected ${NAMES[$IDX]} (1 of ${#TOKENS[@]} available tokens)"
+    echo "::add-mask::${TOKENS[$IDX]}"
+    echo "token=${TOKENS[$IDX]}" >> $GITHUB_OUTPUT
+```
+
+The selected token is then passed via `GITHUB_TOKEN` env var to subsequent steps.
+
+#### 4.3.2 Health Check Token Strategy
+
+The health check workflows re-use the **same pool of `COPILOT_GITHUB_TOKEN*` repo secrets** — no additional secrets are needed. The random selection is applied at two levels:
+
+| Workflow | When Token Is Selected | How It's Used |
+|----------|----------------------|---------------|
+| **Orchestrator** (`devops-health-check.md`) | Once at workflow start, before the `gh aw` agent begins | Passed as `GITHUB_TOKEN` env var to the `gh aw` runtime; used for all LLM calls during the orchestrator run |
+| **Worker** (`devops-health-investigate.md`) | Once per dispatched worker job | Each worker independently selects a random token; since workers run as separate workflow runs, they naturally spread across the token pool |
+
+This means a single health check cycle (orchestrator + up to 10 workers) can use **up to 11 different tokens**, maximizing throughput and minimizing per-token rate-limit pressure.
+
+#### 4.3.3 Implementation for `gh aw` Workflows
+
+Since `gh aw` agentic workflows run as GitHub Actions jobs, the token selection step is added to the Actions YAML that triggers the workflow. The calling workflow (e.g., a `.github/workflows/devops-health-check.yml` wrapper) includes the same select-token step and injects the result:
+
+```yaml
+# .github/workflows/devops-health-check.yml
+name: devops-health-check
+
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+jobs:
+  health-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select random Copilot token
+        id: select-token
+        env:
+          TOKEN_1: ${{ secrets.COPILOT_GITHUB_TOKEN }}
+          TOKEN_2: ${{ secrets.COPILOT_GITHUB_TOKEN_2 }}
+          TOKEN_3: ${{ secrets.COPILOT_GITHUB_TOKEN_3 }}
+          TOKEN_4: ${{ secrets.COPILOT_GITHUB_TOKEN_4 }}
+          TOKEN_5: ${{ secrets.COPILOT_GITHUB_TOKEN_5 }}
+          TOKEN_6: ${{ secrets.COPILOT_GITHUB_TOKEN_6 }}
+          TOKEN_7: ${{ secrets.COPILOT_GITHUB_TOKEN_7 }}
+          TOKEN_8: ${{ secrets.COPILOT_GITHUB_TOKEN_8 }}
+        run: |
+          TOKENS=()
+          NAMES=()
+          for i in 1 2 3 4 5 6 7 8; do
+            var="TOKEN_$i"; val="${!var}"
+            if [ -n "$val" ]; then
+              TOKENS+=("$val")
+              if [ "$i" -eq 1 ]; then NAMES+=("COPILOT_GITHUB_TOKEN")
+              else NAMES+=("COPILOT_GITHUB_TOKEN_$i"); fi
+            fi
+          done
+          if [ ${#TOKENS[@]} -eq 0 ]; then
+            echo "::error::No COPILOT_GITHUB_TOKEN secrets are configured"
+            exit 1
+          fi
+          IDX=$((RANDOM % ${#TOKENS[@]}))
+          echo "Selected ${NAMES[$IDX]} (1 of ${#TOKENS[@]} available tokens)"
+          echo "::add-mask::${TOKENS[$IDX]}"
+          echo "token=${TOKENS[$IDX]}" >> $GITHUB_OUTPUT
+
+      - name: Run health check agentic workflow
+        env:
+          GITHUB_TOKEN: ${{ steps.select-token.outputs.token }}
+        run: gh aw run eng/agentic-workflows/devops-health-check.md --wait
+```
+
+The same pattern applies to the worker wrapper (`devops-health-investigate.yml`), ensuring each dispatched investigation independently picks a random token.
+
+#### 4.3.4 Design Rationale
+
+| Decision | Rationale |
+|----------|----------|
+| **Reuse existing `COPILOT_GITHUB_TOKEN*` secrets** | No secret proliferation; health check uses the same Copilot API as evals |
+| **Random selection per job** | Distributes load evenly; avoids hot-spotting a single token on cron |
+| **Up to 8 tokens** | Matches the eval workflow's pool size; new tokens are automatically picked up when added to repo secrets |
+| **Mask token in logs** | `::add-mask::` prevents accidental exposure in Actions logs |
+| **Fail-fast if no tokens** | Health check cannot run without a Copilot token — fail loudly rather than silently skipping LLM analysis |
+| **Independent selection per worker** | Workers are separate runs; each selecting its own token maximizes parallelism and avoids single-token bottleneck when 10 workers run concurrently |
+
+---
+
+### 4.4 Key Design Decisions
 
 | Decision | Choice | Rationale |
 |----------|--------|-----------|
