@@ -1,0 +1,71 @@
+# DevOps Agentic Workflows
+
+Cross-cutting [GitHub Agentic Workflow](https://github.com/github/gh-aw) templates for repository-wide DevOps automation.
+
+These workflows monitor the _entire repo_ (all components, all pipelines, all PRs), unlike the component-specific workflows in `src/dotnet-msbuild/agentic-workflows/`.
+
+## Available Workflows
+
+| Workflow | Description | Trigger |
+|----------|-------------|---------|
+| [devops-health-check](devops-health-check.md) | Daily orchestrator that collects repo health signals (pipelines, skill quality, PRs, infrastructure), computes a fingerprint-based diff against the previous run, and updates a pinned health dashboard issue | `schedule: 0 0 * * *` (daily midnight UTC), `/health-check` slash command, `workflow_dispatch` |
+| [devops-health-investigate](devops-health-investigate.md) | Worker agent dispatched by the health check orchestrator to perform deep root-cause analysis on individual findings | `workflow_dispatch` (dispatched by orchestrator via `dispatch-workflow`) |
+
+## Architecture
+
+```
+devops-health-check (Orchestrator)
+  ├─ Collects health signals from 5 categories:
+  │   Pipeline · Quality · PRs · Infrastructure · Resources
+  ├─ Fingerprints each finding for stable diff tracking
+  ├─ Classifies: 🆕 NEW · 📌 EXISTING · ✅ RESOLVED
+  ├─ Updates pinned health dashboard issue
+  └─ Dispatches investigation workers (up to 10)
+       │
+       ▼
+devops-health-investigate (Worker × N)
+  ├─ Investigates ONE finding with fresh context
+  ├─ Follows category-specific playbook
+  ├─ Determines root cause + remediation
+  └─ Updates health issue via replace-island
+```
+
+## Setup
+
+1. Install the `gh aw` CLI extension: `gh extension install github/gh-aw`
+2. Copy the workflow files and `shared/` directory to your repository
+3. Compile: `gh aw compile`
+4. Commit both the `.md` and generated `.lock.yml` files
+5. The health check runs daily at midnight UTC, or on-demand via `/health-check`
+
+## Local Development
+
+```powershell
+# Validate both workflows
+gh aw validate devops-health-check devops-health-investigate --strict
+
+# Trial run (sandboxed)
+gh aw trial ./devops-health-check.md --clone-repo dotnet/skills
+
+# Trial with both orchestrator + worker
+gh aw trial ./devops-health-check.md ./devops-health-investigate.md --clone-repo dotnet/skills
+```
+
+## File Structure
+
+```
+eng/agentic-workflows/
+├── devops-health-check.md              # Orchestrator workflow
+├── devops-health-investigate.md        # Worker workflow
+├── README.md                           # This file
+└── shared/
+    └── compiled/
+        ├── devops-health.lock.md       # Health check catalog & fingerprinting rules
+        └── devops-investigate.lock.md  # Investigation playbooks & remediation templates
+```
+
+## Related
+
+- [src/dotnet-msbuild/agentic-workflows/](../../src/dotnet-msbuild/agentic-workflows/) — MSBuild-specific agentic workflows
+- [eng/dashboard/](../dashboard/) — Benchmark dashboard (data source for quality checks)
+- [Design document](../../docs/devops-health-check-implementation-plan.md) — Full implementation plan
