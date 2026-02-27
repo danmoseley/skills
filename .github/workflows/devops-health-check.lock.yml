@@ -659,13 +659,13 @@ jobs:
                   }
                 },
                 "required": [
-                  "correlation_id",
-                  "finding_id",
-                  "finding_severity",
                   "finding_title",
                   "finding_type",
                   "health_issue_number",
-                  "resource_url"
+                  "resource_url",
+                  "correlation_id",
+                  "finding_id",
+                  "finding_severity"
                 ],
                 "type": "object"
               },
