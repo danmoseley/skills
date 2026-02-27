@@ -4266,6 +4266,265 @@
           "timestamp": "2026-02-26T22:18:47+00:00",
           "message": "Fix typo in README.md (#132)"
         }
+      },
+      {
+        "commit": {
+          "timestamp": "2026-02-27T10:09:02+00:00",
+          "id": "a077eda88acc7ff8cf7426d9609a378cfe1cff73",
+          "author": {
+            "username": "ViktorHofer",
+            "name": "Viktor Hofer"
+          },
+          "message": "Remove shell tool restrictions from agentic workflows (#136)",
+          "url": "https://github.com/dotnet/skills/commit/a077eda88acc7ff8cf7426d9609a378cfe1cff73"
+        },
+        "date": 1772189989308,
+        "benches": [
+          {
+            "unit": "Score (0-10)",
+            "name": "csharp-scripts/Test a C# language feature with a script - Skilled Quality",
+            "value": 8.800000190734863
+          },
+          {
+            "unit": "Score (0-10)",
+            "name": "csharp-scripts/Test a C# language feature with a script - Vanilla Quality",
+            "value": 5.599999904632568
+          },
+          {
+            "unit": "Score (0-10)",
+            "name": "analyzing-dotnet-performance/Detects compiled regex startup budget and regex chain allocations - Skilled Quality",
+            "value": 10.0
+          },
+          {
+            "unit": "Score (0-10)",
+            "name": "analyzing-dotnet-performance/Detects compiled regex startup budget and regex chain allocations - Vanilla Quality",
+            "value": 2.799999952316284
+          },
+          {
+            "unit": "Score (0-10)",
+            "name": "analyzing-dotnet-performance/Detects CurrentCulture comparer and compiled regex budget in inflection rules - Skilled Quality",
+            "value": 10.0
+          },
+          {
+            "unit": "Score (0-10)",
+            "name": "analyzing-dotnet-performance/Detects CurrentCulture comparer and compiled regex budget in inflection rules - Vanilla Quality",
+            "value": 2.0
+          },
+          {
+            "unit": "Score (0-10)",
+            "name": "analyzing-dotnet-performance/Finds per-call Dictionary allocation not hoisted to static - Skilled Quality",
+            "timedOut": true,
+            "value": 8.399999618530273
+          },
+          {
+            "unit": "Score (0-10)",
+            "name": "analyzing-dotnet-performance/Finds per-call Dictionary allocation not hoisted to static - Vanilla Quality",
+            "value": 2.0
+          },
+          {
+            "unit": "Score (0-10)",
+            "name": "analyzing-dotnet-performance/Catches compound allocations in recursive number converter with ToLower - Skilled Quality",
+            "value": 8.800000190734863
+          },
+          {
+            "unit": "Score (0-10)",
+            "name": "analyzing-dotnet-performance/Catches compound allocations in recursive number converter with ToLower - Vanilla Quality",
+            "value": 2.0
+          },
+          {
+            "unit": "Score (0-10)",
+            "name": "analyzing-dotnet-performance/Finds StringComparison.Ordinal missing and FrozenDictionary opportunities - Skilled Quality",
+            "value": 8.800000190734863
+          },
+          {
+            "unit": "Score (0-10)",
+            "name": "analyzing-dotnet-performance/Finds StringComparison.Ordinal missing and FrozenDictionary opportunities - Vanilla Quality",
+            "value": 2.0
+          },
+          {
+            "unit": "Score (0-10)",
+            "name": "analyzing-dotnet-performance/Detects Aggregate+Replace chain and struct missing IEquatable - Skilled Quality",
+            "value": 9.600000381469727
+          },
+          {
+            "unit": "Score (0-10)",
+            "name": "analyzing-dotnet-performance/Detects Aggregate+Replace chain and struct missing IEquatable - Vanilla Quality",
+            "value": 2.0
+          },
+          {
+            "unit": "Score (0-10)",
+            "name": "analyzing-dotnet-performance/Finds branched Replace chain in format string manipulation - Skilled Quality",
+            "value": 7.599999904632568
+          },
+          {
+            "unit": "Score (0-10)",
+            "name": "analyzing-dotnet-performance/Finds branched Replace chain in format string manipulation - Vanilla Quality",
+            "value": 2.0
+          },
+          {
+            "unit": "Score (0-10)",
+            "name": "analyzing-dotnet-performance/Catches LINQ on hot-path string processing and All(char.IsUpper) - Skilled Quality",
+            "value": 10.0
+          },
+          {
+            "unit": "Score (0-10)",
+            "name": "analyzing-dotnet-performance/Catches LINQ on hot-path string processing and All(char.IsUpper) - Vanilla Quality",
+            "value": 2.0
+          },
+          {
+            "unit": "Score (0-10)",
+            "name": "analyzing-dotnet-performance/Detects LINQ pipeline in TimeSpan formatting and collection processing - Skilled Quality",
+            "value": 9.199999809265137
+          },
+          {
+            "unit": "Score (0-10)",
+            "name": "analyzing-dotnet-performance/Detects LINQ pipeline in TimeSpan formatting and collection processing - Vanilla Quality",
+            "value": 2.0
+          },
+          {
+            "unit": "Score (0-10)",
+            "name": "analyzing-dotnet-performance/Flags Span inconsistencies and compound method chains in truncation library - Skilled Quality",
+            "value": 9.600000381469727
+          },
+          {
+            "unit": "Score (0-10)",
+            "name": "analyzing-dotnet-performance/Flags Span inconsistencies and compound method chains in truncation library - Vanilla Quality",
+            "value": 2.0
+          },
+          {
+            "unit": "Score (0-10)",
+            "name": "analyzing-dotnet-performance/Identifies unsealed leaf classes and locale hierarchy patterns - Skilled Quality",
+            "value": 10.0
+          },
+          {
+            "unit": "Score (0-10)",
+            "name": "analyzing-dotnet-performance/Identifies unsealed leaf classes and locale hierarchy patterns - Vanilla Quality",
+            "value": 2.0
+          },
+          {
+            "unit": "Score (0-10)",
+            "name": "dotnet-pinvoke/Generate LibraryImport declaration from C header (.NET 8+) - Skilled Quality",
+            "value": 10.0
+          },
+          {
+            "unit": "Score (0-10)",
+            "name": "dotnet-pinvoke/Generate LibraryImport declaration from C header (.NET 8+) - Vanilla Quality",
+            "value": 8.399999618530273
+          },
+          {
+            "unit": "Score (0-10)",
+            "name": "dotnet-pinvoke/Generate LibraryImport declaration from C header (.NET Framework) - Skilled Quality",
+            "value": 10.0
+          },
+          {
+            "unit": "Score (0-10)",
+            "name": "dotnet-pinvoke/Generate LibraryImport declaration from C header (.NET Framework) - Vanilla Quality",
+            "value": 8.399999618530273
+          },
+          {
+            "timedOut": true,
+            "unit": "Score (0-10)",
+            "name": "dump-collect/Configure automatic crash dumps for CoreCLR app on Linux - Skilled Quality",
+            "notActivated": true,
+            "value": 9.199999809265137
+          },
+          {
+            "unit": "Score (0-10)",
+            "name": "dump-collect/Configure automatic crash dumps for CoreCLR app on Linux - Vanilla Quality",
+            "value": 8.0
+          },
+          {
+            "timedOut": true,
+            "unit": "Score (0-10)",
+            "name": "dump-collect/Set up NativeAOT crash dumps with createdump in Kubernetes - Skilled Quality",
+            "notActivated": true,
+            "value": 10.0
+          },
+          {
+            "unit": "Score (0-10)",
+            "name": "dump-collect/Set up NativeAOT crash dumps with createdump in Kubernetes - Vanilla Quality",
+            "value": 3.200000047683716
+          },
+          {
+            "unit": "Score (0-10)",
+            "name": "dump-collect/Recover crash dump from macOS NativeAOT without createdump - Skilled Quality",
+            "notActivated": true,
+            "value": 8.399999618530273
+          },
+          {
+            "unit": "Score (0-10)",
+            "name": "dump-collect/Recover crash dump from macOS NativeAOT without createdump - Vanilla Quality",
+            "value": 6.400000095367432
+          },
+          {
+            "unit": "Score (0-10)",
+            "name": "dump-collect/Configure CoreCLR dump collection in Alpine Docker as non-root - Skilled Quality",
+            "notActivated": true,
+            "value": 7.599999904632568
+          },
+          {
+            "unit": "Score (0-10)",
+            "name": "dump-collect/Configure CoreCLR dump collection in Alpine Docker as non-root - Vanilla Quality",
+            "value": 6.400000095367432
+          },
+          {
+            "unit": "Score (0-10)",
+            "name": "dump-collect/Advisory: macOS NativeAOT crash dump recovery steps - Skilled Quality",
+            "notActivated": true,
+            "value": 8.0
+          },
+          {
+            "unit": "Score (0-10)",
+            "name": "dump-collect/Advisory: macOS NativeAOT crash dump recovery steps - Vanilla Quality",
+            "value": 7.599999904632568
+          },
+          {
+            "unit": "Score (0-10)",
+            "name": "dump-collect/Advisory: CoreCLR Alpine Docker non-root configuration - Skilled Quality",
+            "notActivated": true,
+            "value": 9.199999809265137
+          },
+          {
+            "unit": "Score (0-10)",
+            "name": "dump-collect/Advisory: CoreCLR Alpine Docker non-root configuration - Vanilla Quality",
+            "value": 8.0
+          },
+          {
+            "unit": "Score (0-10)",
+            "name": "dump-collect/Advisory: NativeAOT Kubernetes dump collection setup - Skilled Quality",
+            "notActivated": true,
+            "value": 5.199999809265137
+          },
+          {
+            "unit": "Score (0-10)",
+            "name": "dump-collect/Advisory: NativeAOT Kubernetes dump collection setup - Vanilla Quality",
+            "value": 5.199999809265137
+          },
+          {
+            "unit": "Score (0-10)",
+            "name": "dump-collect/Detect runtime and configure crash dumps for unknown .NET app on Linux - Skilled Quality",
+            "notActivated": true,
+            "value": 8.399999618530273
+          },
+          {
+            "unit": "Score (0-10)",
+            "name": "dump-collect/Detect runtime and configure crash dumps for unknown .NET app on Linux - Vanilla Quality",
+            "value": 7.599999904632568
+          },
+          {
+            "unit": "Score (0-10)",
+            "name": "dump-collect/Decline dump analysis request - Skilled Quality",
+            "notActivated": true,
+            "value": 9.600000381469727
+          },
+          {
+            "unit": "Score (0-10)",
+            "name": "dump-collect/Decline dump analysis request - Vanilla Quality",
+            "value": 4.800000190734863
+          }
+        ],
+        "model": "claude-opus-4.6",
+        "tool": "customBiggerIsBetter"
       }
     ],
     "Efficiency": [
@@ -8629,8 +8888,279 @@
           "timestamp": "2026-02-26T22:18:47+00:00",
           "message": "Fix typo in README.md (#132)"
         }
+      },
+      {
+        "commit": {
+          "timestamp": "2026-02-27T10:09:02+00:00",
+          "id": "a077eda88acc7ff8cf7426d9609a378cfe1cff73",
+          "author": {
+            "username": "ViktorHofer",
+            "name": "Viktor Hofer"
+          },
+          "message": "Remove shell tool restrictions from agentic workflows (#136)",
+          "url": "https://github.com/dotnet/skills/commit/a077eda88acc7ff8cf7426d9609a378cfe1cff73"
+        },
+        "date": 1772189989308,
+        "benches": [
+          {
+            "unit": "seconds",
+            "name": "csharp-scripts/Test a C# language feature with a script - Skilled Time",
+            "value": 45.9
+          },
+          {
+            "unit": "tokens",
+            "name": "csharp-scripts/Test a C# language feature with a script - Skilled Tokens In",
+            "value": 86720.0
+          },
+          {
+            "unit": "seconds",
+            "name": "analyzing-dotnet-performance/Detects compiled regex startup budget and regex chain allocations - Skilled Time",
+            "value": 101.1
+          },
+          {
+            "unit": "tokens",
+            "name": "analyzing-dotnet-performance/Detects compiled regex startup budget and regex chain allocations - Skilled Tokens In",
+            "value": 94154.0
+          },
+          {
+            "unit": "seconds",
+            "name": "analyzing-dotnet-performance/Detects CurrentCulture comparer and compiled regex budget in inflection rules - Skilled Time",
+            "value": 111.0
+          },
+          {
+            "unit": "tokens",
+            "name": "analyzing-dotnet-performance/Detects CurrentCulture comparer and compiled regex budget in inflection rules - Skilled Tokens In",
+            "value": 119176.0
+          },
+          {
+            "unit": "seconds",
+            "name": "analyzing-dotnet-performance/Finds per-call Dictionary allocation not hoisted to static - Skilled Time",
+            "timedOut": true,
+            "value": 90.9
+          },
+          {
+            "unit": "tokens",
+            "name": "analyzing-dotnet-performance/Finds per-call Dictionary allocation not hoisted to static - Skilled Tokens In",
+            "timedOut": true,
+            "value": 106847.0
+          },
+          {
+            "unit": "seconds",
+            "name": "analyzing-dotnet-performance/Catches compound allocations in recursive number converter with ToLower - Skilled Time",
+            "value": 82.2
+          },
+          {
+            "unit": "tokens",
+            "name": "analyzing-dotnet-performance/Catches compound allocations in recursive number converter with ToLower - Skilled Tokens In",
+            "value": 86855.0
+          },
+          {
+            "unit": "seconds",
+            "name": "analyzing-dotnet-performance/Finds StringComparison.Ordinal missing and FrozenDictionary opportunities - Skilled Time",
+            "value": 75.6
+          },
+          {
+            "unit": "tokens",
+            "name": "analyzing-dotnet-performance/Finds StringComparison.Ordinal missing and FrozenDictionary opportunities - Skilled Tokens In",
+            "value": 123210.0
+          },
+          {
+            "unit": "seconds",
+            "name": "analyzing-dotnet-performance/Detects Aggregate+Replace chain and struct missing IEquatable - Skilled Time",
+            "value": 104.8
+          },
+          {
+            "unit": "tokens",
+            "name": "analyzing-dotnet-performance/Detects Aggregate+Replace chain and struct missing IEquatable - Skilled Tokens In",
+            "value": 88666.0
+          },
+          {
+            "unit": "seconds",
+            "name": "analyzing-dotnet-performance/Finds branched Replace chain in format string manipulation - Skilled Time",
+            "value": 103.1
+          },
+          {
+            "unit": "tokens",
+            "name": "analyzing-dotnet-performance/Finds branched Replace chain in format string manipulation - Skilled Tokens In",
+            "value": 108797.0
+          },
+          {
+            "unit": "seconds",
+            "name": "analyzing-dotnet-performance/Catches LINQ on hot-path string processing and All(char.IsUpper) - Skilled Time",
+            "value": 108.3
+          },
+          {
+            "unit": "tokens",
+            "name": "analyzing-dotnet-performance/Catches LINQ on hot-path string processing and All(char.IsUpper) - Skilled Tokens In",
+            "value": 101266.0
+          },
+          {
+            "unit": "seconds",
+            "name": "analyzing-dotnet-performance/Detects LINQ pipeline in TimeSpan formatting and collection processing - Skilled Time",
+            "value": 116.2
+          },
+          {
+            "unit": "tokens",
+            "name": "analyzing-dotnet-performance/Detects LINQ pipeline in TimeSpan formatting and collection processing - Skilled Tokens In",
+            "value": 109284.0
+          },
+          {
+            "unit": "seconds",
+            "name": "analyzing-dotnet-performance/Flags Span inconsistencies and compound method chains in truncation library - Skilled Time",
+            "value": 97.3
+          },
+          {
+            "unit": "tokens",
+            "name": "analyzing-dotnet-performance/Flags Span inconsistencies and compound method chains in truncation library - Skilled Tokens In",
+            "value": 137413.0
+          },
+          {
+            "unit": "seconds",
+            "name": "analyzing-dotnet-performance/Identifies unsealed leaf classes and locale hierarchy patterns - Skilled Time",
+            "value": 95.3
+          },
+          {
+            "unit": "tokens",
+            "name": "analyzing-dotnet-performance/Identifies unsealed leaf classes and locale hierarchy patterns - Skilled Tokens In",
+            "value": 130188.0
+          },
+          {
+            "unit": "seconds",
+            "name": "dotnet-pinvoke/Generate LibraryImport declaration from C header (.NET 8+) - Skilled Time",
+            "value": 21.6
+          },
+          {
+            "unit": "tokens",
+            "name": "dotnet-pinvoke/Generate LibraryImport declaration from C header (.NET 8+) - Skilled Tokens In",
+            "value": 50728.0
+          },
+          {
+            "unit": "seconds",
+            "name": "dotnet-pinvoke/Generate LibraryImport declaration from C header (.NET Framework) - Skilled Time",
+            "value": 23.1
+          },
+          {
+            "unit": "tokens",
+            "name": "dotnet-pinvoke/Generate LibraryImport declaration from C header (.NET Framework) - Skilled Tokens In",
+            "value": 33104.0
+          },
+          {
+            "timedOut": true,
+            "unit": "seconds",
+            "name": "dump-collect/Configure automatic crash dumps for CoreCLR app on Linux - Skilled Time",
+            "notActivated": true,
+            "value": 36.8
+          },
+          {
+            "timedOut": true,
+            "unit": "tokens",
+            "name": "dump-collect/Configure automatic crash dumps for CoreCLR app on Linux - Skilled Tokens In",
+            "notActivated": true,
+            "value": 82769.0
+          },
+          {
+            "timedOut": true,
+            "unit": "seconds",
+            "name": "dump-collect/Set up NativeAOT crash dumps with createdump in Kubernetes - Skilled Time",
+            "notActivated": true,
+            "value": 20.8
+          },
+          {
+            "timedOut": true,
+            "unit": "tokens",
+            "name": "dump-collect/Set up NativeAOT crash dumps with createdump in Kubernetes - Skilled Tokens In",
+            "notActivated": true,
+            "value": 47516.0
+          },
+          {
+            "unit": "seconds",
+            "name": "dump-collect/Recover crash dump from macOS NativeAOT without createdump - Skilled Time",
+            "notActivated": true,
+            "value": 35.5
+          },
+          {
+            "unit": "tokens",
+            "name": "dump-collect/Recover crash dump from macOS NativeAOT without createdump - Skilled Tokens In",
+            "notActivated": true,
+            "value": 93880.0
+          },
+          {
+            "unit": "seconds",
+            "name": "dump-collect/Configure CoreCLR dump collection in Alpine Docker as non-root - Skilled Time",
+            "notActivated": true,
+            "value": 34.3
+          },
+          {
+            "unit": "tokens",
+            "name": "dump-collect/Configure CoreCLR dump collection in Alpine Docker as non-root - Skilled Tokens In",
+            "notActivated": true,
+            "value": 78113.0
+          },
+          {
+            "unit": "seconds",
+            "name": "dump-collect/Advisory: macOS NativeAOT crash dump recovery steps - Skilled Time",
+            "notActivated": true,
+            "value": 35.8
+          },
+          {
+            "unit": "tokens",
+            "name": "dump-collect/Advisory: macOS NativeAOT crash dump recovery steps - Skilled Tokens In",
+            "notActivated": true,
+            "value": 95151.0
+          },
+          {
+            "unit": "seconds",
+            "name": "dump-collect/Advisory: CoreCLR Alpine Docker non-root configuration - Skilled Time",
+            "notActivated": true,
+            "value": 26.6
+          },
+          {
+            "unit": "tokens",
+            "name": "dump-collect/Advisory: CoreCLR Alpine Docker non-root configuration - Skilled Tokens In",
+            "notActivated": true,
+            "value": 64936.0
+          },
+          {
+            "unit": "seconds",
+            "name": "dump-collect/Advisory: NativeAOT Kubernetes dump collection setup - Skilled Time",
+            "notActivated": true,
+            "value": 44.9
+          },
+          {
+            "unit": "tokens",
+            "name": "dump-collect/Advisory: NativeAOT Kubernetes dump collection setup - Skilled Tokens In",
+            "notActivated": true,
+            "value": 87328.0
+          },
+          {
+            "unit": "seconds",
+            "name": "dump-collect/Detect runtime and configure crash dumps for unknown .NET app on Linux - Skilled Time",
+            "notActivated": true,
+            "value": 43.9
+          },
+          {
+            "unit": "tokens",
+            "name": "dump-collect/Detect runtime and configure crash dumps for unknown .NET app on Linux - Skilled Tokens In",
+            "notActivated": true,
+            "value": 93072.0
+          },
+          {
+            "unit": "seconds",
+            "name": "dump-collect/Decline dump analysis request - Skilled Time",
+            "notActivated": true,
+            "value": 15.4
+          },
+          {
+            "unit": "tokens",
+            "name": "dump-collect/Decline dump analysis request - Skilled Tokens In",
+            "notActivated": true,
+            "value": 12158.0
+          }
+        ],
+        "model": "claude-opus-4.6",
+        "tool": "customSmallerIsBetter"
       }
     ]
   },
-  "lastUpdate": 1772182910125
+  "lastUpdate": 1772189989308
 }
