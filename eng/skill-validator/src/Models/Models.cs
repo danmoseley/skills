@@ -298,6 +298,7 @@ public sealed record ValidatorConfig
     public string? TestsDir { get; init; }
     public bool OverfittingCheck { get; init; } = true;
     public bool OverfittingFix { get; init; }
+    public bool KeepSessions { get; init; }
 }
 
 public static class DefaultWeights
