@@ -105,14 +105,33 @@ GET /repos/{owner}/{repo}/actions/runs?branch=main&per_page=100
 Group by workflow name, compute success/failure ratio over the last 7 days.
 - 🔵 Info (metric only — reported in trends table, not fingerprinted)
 
-### 1.3 Skill Quality (Q1–Q6)
+### 1.3 Skill Quality (Q1–Q7)
 
 Fetch benchmark data for each discovered component:
 ```
 GET https://raw.githubusercontent.com/{owner}/{repo}/gh-pages/data/{component}.json
 ```
 
-**Q1 — Bench entries with anomaly flags:**
+**Q1 — Skill inventory overview table:**
+Compile a comprehensive table of all skills combining local discovery with benchmark data. For each skill, classify its health status:
+- **🟢 OK** — Skill has tests, scenarios pass, skilled > vanilla, no anomaly flags
+- **🟡 Warning** — Skill is functional but has issues: timeouts, overfitting, or high variance (stddev > 1.5)
+- **🟡 Low Value** — Some scenarios show skilled ≤ vanilla (but others show uplift)
+- **🔴 No Value** — All scenarios show skilled ≤ vanilla (skill adds nothing)
+- **🔴 Critical** — Skill not activated by the agent (`notActivated` flag)
+- **⚪ Untested** — No test directory, no eval.yaml, or eval.yaml has 0 scenarios
+- **⚪ No Data** — Skill exists locally but has no benchmark data
+
+This table is informational (🔵 Info) and not fingerprinted. It is rendered in the issue body as a dedicated "Skill Inventory" section.
+
+For each skill, compute:
+- **Avg Skilled score**: average of all scenario "Skilled Quality" bench values in the latest entry
+- **Avg Vanilla score**: average of all scenario "Vanilla Quality" bench values in the latest entry
+- **Delta**: Skilled − Vanilla
+- **Scenario count**: number of scenarios with benchmark data
+- **Issue summary**: comma-separated list of issues (timeout, overfitting, no-uplift, high-variance, etc.)
+
+**Q2 — Bench entries with anomaly flags:**
 Scan the latest entry in **both** `entries.Quality` and `entries.Efficiency` arrays. For each bench entry, check for any property beyond the standard `name`/`unit`/`value` fields. Any extra boolean property is an anomaly flag (e.g., `notActivated`, `timedOut`, `testOverfitted`, or future flags).
 - Extract the skill name and scenario from the bench `name` field (format: `"{skill}/{scenario} - {metric}"`)
 - 🔴 Critical if `notActivated` (skill broken)
@@ -120,31 +139,32 @@ Scan the latest entry in **both** `entries.Quality` and `entries.Efficiency` arr
 - Fingerprint: `quality:{skill}:{scenario}:{flag-name}`
 - **Deduplicate:** If the same skill/scenario/flag appears in both Quality and Efficiency arrays, report it only once.
 
-**Q2 — Quality regression (>1.0 point drop vs 7-day rolling avg):**
+**Q3 — Quality regression (>1.0 point drop vs 7-day rolling avg):**
 For each scenario's "Skilled Quality" bench, compare the latest value to the rolling average of all entries from the last 7 calendar days (filter by `date` field).
 - 🔴 Critical if drop > 2.0 points
 - 🟡 Warning if drop > 1.0 points
 - Fingerprint: `quality:{skill}:{scenario}:regressed`
 
-**Q3 — Skilled ≤ Vanilla (skill adds no value):**
+**Q4 — Skilled ≤ Vanilla (skill adds no value):**
 For the latest entry, compare `"{skill}/{scenario} - Skilled Quality"` vs `"{skill}/{scenario} - Vanilla Quality"` bench values.
 - 🟡 Warning if Skilled ≤ Vanilla
 - Fingerprint: `quality:{skill}:{scenario}:no-uplift`
 
-**Q4 — High variance across runs:**
+**Q5 — High variance across runs:**
 Compute the standard deviation of `"Skilled Quality"` scores across all entries from the last 7 calendar days.
 - 🟡 Warning if stddev > 1.5
 - Fingerprint: `quality:{skill}:{scenario}:high-variance`
 
-**Q5 — Skills without eval tests:**
+**Q6 — Skills without eval tests:**
 ```
 find src/*/skills/ -mindepth 1 -maxdepth 1 -type d
 ```
 For each skill directory, check if a corresponding test directory exists under `src/{component}/tests/{skill-name}/`.
-- 🟡 Warning if no test directory found
+If the test directory exists, verify that `eval.yaml` exists and contains at least one scenario.
+- 🟡 Warning if no test directory, no eval.yaml, or eval.yaml has no scenarios
 - Fingerprint: `coverage:{skill}:no-tests`
 
-**Q6 — Benchmark data staleness:**
+**Q7 — Benchmark data staleness:**
 Check if the latest entry's `date` timestamp is > 24h old (compare to current time).
 - 🟡 Warning (pipeline may not be publishing)
 - Fingerprint: `quality:benchmark-stale:{component}`
@@ -297,6 +317,19 @@ Replace the entire issue body with the following structure:
 
 **Status:** 🔴 {critical_count} critical · 🟡 {warning_count} warnings · 🔵 {info_count} info
 **Since yesterday:** 🆕 {new_count} new · ✅ {resolved_count} resolved · 📌 {existing_count} unchanged
+
+---
+
+## 🧩 Skill Inventory
+
+> Comprehensive health status of all skills derived from Q1–Q7 checks.
+
+| Status | Component | Skill | Skilled | Vanilla | Δ | Scenarios | Issues |
+|--------|-----------|-------|--------:|--------:|--:|----------:|--------|
+{For each skill, sorted by component then skill name:}
+| {status_emoji} {status_label} | {component} | {skill_name} | {avg_skilled} | {avg_vanilla} | {delta} | {scenario_count} | {issue_summary} |
+
+**Legend:** 🟢 OK · 🟡 Warning / Low Value · 🔴 No Value / Critical · ⚪ Untested / No Data
 
 ---
 
