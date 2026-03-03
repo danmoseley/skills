@@ -68,28 +68,23 @@ $efficiencyBenches = [System.Collections.Generic.List[object]]::new()
 foreach ($verdict in $results.verdicts) {
     $skillName = $verdict.skillName
 
-    # Check verdict-level activation state
-    $verdictNotActivated = $false
-    if ($verdict.skillNotActivated -eq $true) {
-        $verdictNotActivated = $true
-    }
-
     foreach ($scenario in $verdict.scenarios) {
         $testName = "$skillName/$($scenario.scenarioName)"
 
-        # Check per-scenario activation state
-        $scenarioNotActivated = $false
+        # Check per-scenario activation state (verdict-level skillNotActivated is a
+        # roll-up across all scenarios and must NOT be used here — each datapoint
+        # should reflect only its own scenario's activation result).
+        $notActivated = $false
         if ($scenario.skillActivation -and -not $scenario.skillActivation.activated) {
             # Only flag as not-activated if activation was expected (expect_activation defaults to true)
-            $scenarioExpectActivation = $true
+            $expectActivation = $true
             if ($scenario.PSObject.Properties['expectActivation'] -and $scenario.expectActivation -eq $false) {
-                $scenarioExpectActivation = $false
+                $expectActivation = $false
             }
-            if ($scenarioExpectActivation) {
-                $scenarioNotActivated = $true
+            if ($expectActivation) {
+                $notActivated = $true
             }
         }
-        $notActivated = $verdictNotActivated -or $scenarioNotActivated
 
         # Check per-scenario timeout state
         $scenarioTimedOut = $false
@@ -97,12 +92,37 @@ foreach ($verdict in $results.verdicts) {
             $scenarioTimedOut = $true
         }
 
-        # Check overfitting state (from verdict-level overfittingResult)
+        # Check overfitting state — use per-scenario assessment when available.
+        # The verdict-level overfittingResult is a skill-wide aggregate; applying it
+        # to every scenario would misrepresent scenarios that are fine.  We check
+        # rubric and assertion assessments for this scenario and fall back to the
+        # verdict-level result only when no per-scenario data exists.
         $overfittingSeverity = $null
         $overfittingScore = $null
         if ($verdict.overfittingResult -and $verdict.overfittingResult.severity -in @("Moderate", "High")) {
-            $overfittingSeverity = $verdict.overfittingResult.severity.ToLower()
-            $overfittingScore = $verdict.overfittingResult.score
+            $scenarioName = $scenario.scenarioName
+            $hasPerScenarioData = $false
+            $scenarioHasIssues = $false
+
+            # Check rubric assessments for this scenario
+            $rubrics = $verdict.overfittingResult.rubricAssessments | Where-Object { $_.scenario -eq $scenarioName }
+            $assertions = $verdict.overfittingResult.assertionAssessments | Where-Object { $_.scenario -eq $scenarioName }
+            if ($rubrics -or $assertions) {
+                $hasPerScenarioData = $true
+                # Flag if any rubric is classified as narrow/technique or any assertion is narrow
+                $scenarioHasIssues = ($rubrics | Where-Object { $_.classification -in @("narrow", "technique") }) -or
+                                     ($assertions | Where-Object { $_.classification -eq "narrow" })
+            }
+
+            if ($hasPerScenarioData -and $scenarioHasIssues) {
+                $overfittingSeverity = $verdict.overfittingResult.severity.ToLower()
+                $overfittingScore = $verdict.overfittingResult.score
+            } elseif (-not $hasPerScenarioData) {
+                # No per-scenario breakdown available; fall back to verdict-level
+                $overfittingSeverity = $verdict.overfittingResult.severity.ToLower()
+                $overfittingScore = $verdict.overfittingResult.score
+            }
+            # else: per-scenario data exists but no issues — leave unflagged
         }
 
         # Quality scores (from judge results, scale 0-5 mapped to 0-10 for dashboard)
