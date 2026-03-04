@@ -88,4 +88,4 @@ XmlAttributeProperties.SetXmlNamespaceMaps(obj, someString);
 XmlAttributeProperties.SetXmlNamespaceMaps(obj, someHashtable);
 ```
 
-`GetXmlNamespaceMaps` previously threw `InvalidCastException` because it tried to cast the `Hashtable` value to `String`. This is now fixed.
+`GetXmlNamespaceMaps` previously could throw an `InvalidCastException` in some cases due to an internal type mismatch during the transition to the new `Hashtable` backing; this behavior has been corrected in .NET 9.
