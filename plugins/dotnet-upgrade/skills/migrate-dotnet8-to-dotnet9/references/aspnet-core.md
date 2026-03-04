@@ -23,7 +23,7 @@ builder.Host.UseDefaultServiceProvider(options =>
 
 ### Forwarded Headers Middleware ignores X-Forwarded-* headers from unknown proxies
 
-**Impact: Medium.** This is a change backported from .NET 8. The `ForwardedHeadersMiddleware` now ignores `X-Forwarded-*` headers from proxies not in the `KnownProxies` or `KnownNetworks` list.
+**Impact: Medium.** The `ForwardedHeadersMiddleware` now ignores `X-Forwarded-*` headers from proxies not in the `KnownProxies` or `KnownNetworks` list.
 
 **Mitigation:** Add your trusted proxy addresses to `KnownProxies` or `KnownNetworks`:
 ```csharp
