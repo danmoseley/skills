@@ -9,9 +9,14 @@ These changes affect projects using BinaryFormatter, System.Text.Json, HttpClien
 **Impact: High.** The in-box `BinaryFormatter` implementation now always throws `NotSupportedException` on `Serialize` and `Deserialize`, even with settings that previously enabled its use. The `EnableUnsafeBinaryFormatterSerialization` AppContext switch has been removed.
 
 ```csharp
-// BREAKS at runtime — NotSupportedException
+// Serialization — BREAKS at runtime with NotSupportedException
 var formatter = new BinaryFormatter();
-formatter.Serialize(stream, obj);      // throws
+formatter.Serialize(stream, obj); // throws
+```
+
+```csharp
+// Deserialization — BREAKS at runtime with NotSupportedException
+var formatter = new BinaryFormatter();
 var obj = formatter.Deserialize(stream); // throws
 ```
 
