@@ -20,14 +20,14 @@ collection.Import(certBytes);
 **Fix:** Use `X509CertificateLoader` methods:
 ```csharp
 // Load DER/PEM encoded certificate
-var cert = X509CertificateLoader.LoadCertificate(certBytes);
+var derCert = X509CertificateLoader.LoadCertificate(certBytes);
 
 // Load PFX/PKCS12
-var cert = X509CertificateLoader.LoadPkcs12(pfxBytes, "password");
+var pfxCert = X509CertificateLoader.LoadPkcs12(pfxBytes, "password");
 
 // Load from file
-var cert = X509CertificateLoader.LoadCertificateFromFile("cert.pem");
-var cert = X509CertificateLoader.LoadPkcs12FromFile("cert.pfx", "password");
+var fileCert = X509CertificateLoader.LoadCertificateFromFile("cert.pem");
+var filePfxCert = X509CertificateLoader.LoadPkcs12FromFile("cert.pfx", "password");
 ```
 
 ### APIs removed from System.Security.Cryptography.Pkcs netstandard2.0
