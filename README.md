@@ -47,7 +47,7 @@ This repository contains the .NET team's curated set of core skills and custom a
 // settings.json
 {
   "chat.plugins.enabled": true,
-  "chat.plugins.marketplaces": ["lewing/agent-plugins"]
+  "chat.plugins.marketplaces": ["dotnet/skills"]
 }
 ```
 
