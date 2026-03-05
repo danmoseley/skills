@@ -96,16 +96,16 @@ Work through compilation errors and new warnings systematically. Load the approp
 
 | If the project uses… | Load reference |
 |-----------------------|----------------|
-| Any .NET 10 project | `references/csharp-compiler.md` |
-| Any .NET 10 project | `references/core-libraries.md` |
-| Any .NET 10 project | `references/sdk-msbuild.md` |
-| ASP.NET Core | `references/aspnet-core.md` |
-| Entity Framework Core | `references/efcore.md` |
-| Cryptography APIs | `references/cryptography.md` |
-| Microsoft.Extensions.Hosting, BackgroundService, configuration | `references/extensions-hosting.md` |
-| System.Text.Json, XmlSerializer, HttpClient, MailAddress, Uri | `references/serialization-networking.md` |
-| Windows Forms or WPF | `references/winforms-wpf.md` |
-| Docker containers, single-file apps, native interop | `references/containers-interop.md` |
+| Any .NET 10 project | `references/csharp-compiler-dotnet9to10.md` |
+| Any .NET 10 project | `references/core-libraries-dotnet9to10.md` |
+| Any .NET 10 project | `references/sdk-msbuild-dotnet9to10.md` |
+| ASP.NET Core | `references/aspnet-core-dotnet9to10.md` |
+| Entity Framework Core | `references/efcore-dotnet9to10.md` |
+| Cryptography APIs | `references/cryptography-dotnet9to10.md` |
+| Microsoft.Extensions.Hosting, BackgroundService, configuration | `references/extensions-hosting-dotnet9to10.md` |
+| System.Text.Json, XmlSerializer, HttpClient, MailAddress, Uri | `references/serialization-networking-dotnet9to10.md` |
+| Windows Forms or WPF | `references/winforms-wpf-dotnet9to10.md` |
+| Docker containers, single-file apps, native interop | `references/containers-interop-dotnet9to10.md` |
 
 **Common source-incompatible changes to check for:**
 
@@ -118,11 +118,11 @@ Work through compilation errors and new warnings systematically. Load the approp
    - `SYSLIB0061`: Replace `Queryable.MaxBy`/`MinBy` overloads taking `IComparer<TSource>` with ones taking `IComparer<TKey>`
    - `SYSLIB0062`: Replace `XsltSettings.EnableScript` usage
 
-3. **C# 14 `field` keyword in property accessors** — The identifier `field` is now a contextual keyword inside property `get`/`set`/`init` accessors. Local variables named `field` cause CS9272 (error). Class members named `field` referenced without `this.` cause CS9258 (warning). Fix by renaming (e.g., `fieldValue`) or escaping with `@field`. See `references/csharp-compiler.md`.
+3. **C# 14 `field` keyword in property accessors** — The identifier `field` is now a contextual keyword inside property `get`/`set`/`init` accessors. Local variables named `field` cause CS9272 (error). Class members named `field` referenced without `this.` cause CS9258 (warning). Fix by renaming (e.g., `fieldValue`) or escaping with `@field`. See `references/csharp-compiler-dotnet9to10.md`.
 
 4. **C# 14 `extension` contextual keyword** — Types, aliases, or type parameters named `extension` are disallowed. Rename or escape with `@extension`.
 
-5. **C# 14 overload resolution with span parameters** — Expression trees containing `.Contains()` on arrays may now bind to `MemoryExtensions.Contains` instead of `Enumerable.Contains`. `Enumerable.Reverse` on arrays may resolve to the in-place `Span` extension. Fix by casting to `IEnumerable<T>`, using `.AsEnumerable()`, or explicit static invocations. See `references/csharp-compiler.md` for full details.
+5. **C# 14 overload resolution with span parameters** — Expression trees containing `.Contains()` on arrays may now bind to `MemoryExtensions.Contains` instead of `Enumerable.Contains`. `Enumerable.Reverse` on arrays may resolve to the in-place `Span` extension. Fix by casting to `IEnumerable<T>`, using `.AsEnumerable()`, or explicit static invocations. See `references/csharp-compiler-dotnet9to10.md` for full details.
 
 6. **ASP.NET Core obsoletions** (if applicable):
    - `WebHostBuilder`, `IWebHost`, `WebHost` are obsolete — migrate to `Host.CreateDefaultBuilder` or `WebApplication.CreateBuilder`
@@ -132,7 +132,7 @@ Work through compilation errors and new warnings systematically. Load the approp
    - `IPNetwork` and `ForwardedHeadersOptions.KnownNetworks` obsolete
    - Razor runtime compilation is obsolete
    - `Microsoft.Extensions.ApiDescription.Client` package deprecated
-   - **`Microsoft.OpenApi` v2.x breaking changes** — `Microsoft.AspNetCore.OpenApi 10.0` pulls in `Microsoft.OpenApi` v2.x which restructures namespaces and models. `OpenApiString`/`OpenApiAny` types are removed (use `JsonNode`), `OpenApiSecurityScheme.Reference` replaced by `OpenApiSecuritySchemeReference`, collections on OpenAPI model objects may be null, and `OpenApiSchema.Nullable` is removed. See `references/aspnet-core.md` for migration patterns.
+   - **`Microsoft.OpenApi` v2.x breaking changes** — `Microsoft.AspNetCore.OpenApi 10.0` pulls in `Microsoft.OpenApi` v2.x which restructures namespaces and models. `OpenApiString`/`OpenApiAny` types are removed (use `JsonNode`), `OpenApiSecurityScheme.Reference` replaced by `OpenApiSecuritySchemeReference`, collections on OpenAPI model objects may be null, and `OpenApiSchema.Nullable` is removed. See `references/aspnet-core-dotnet9to10.md` for migration patterns.
 
 7. **SDK changes**:
    - `dotnet new sln` now defaults to SLNX format — use `--format sln` if the old format is needed
@@ -140,7 +140,7 @@ Work through compilation errors and new warnings systematically. Load the approp
    - `dnx.ps1` removed from .NET SDK
    - `project.json` no longer supported in `dotnet restore`
 
-8. **EF Core source changes** (if applicable) — See `references/efcore.md` for:
+8. **EF Core source changes** (if applicable) — See `references/efcore-dotnet9to10.md` for:
    - `ExecuteUpdateAsync` now accepts a regular lambda (expression tree construction code must be rewritten)
    - `IDiscriminatorPropertySetConvention` signature changed
    - `IRelationalCommandDiagnosticsLogger` methods add `logCommandText` parameter
@@ -202,7 +202,7 @@ Behavioral changes do not cause build errors but may change runtime behavior. Re
 - `dotnet restore` audits transitive packages
 - `dotnet watch` logs to stderr instead of stdout
 - `dotnet` CLI commands log non-command-relevant data to stderr
-- Various NuGet behavioral changes (see `references/sdk-msbuild.md`)
+- Various NuGet behavioral changes (see `references/sdk-msbuild-dotnet9to10.md`)
 - `StatusStrip` uses System RenderMode by default (WinForms)
 - `TreeView` checkbox image truncation fix (WinForms)
 - `DynamicResource` incorrect usage causes crash (WPF)
@@ -264,13 +264,13 @@ The `references/` folder contains detailed breaking change information organized
 
 | Reference file | When to load |
 |----------------|-------------|
-| `references/csharp-compiler.md` | Always (C# 14 compiler breaking changes — field keyword, extension keyword, span overloads) |
-| `references/core-libraries.md` | Always (applies to all .NET 10 projects) |
-| `references/sdk-msbuild.md` | Always (SDK and build tooling changes) |
-| `references/aspnet-core.md` | Project uses ASP.NET Core |
-| `references/efcore.md` | Project uses Entity Framework Core or Microsoft.Data.Sqlite |
-| `references/cryptography.md` | Project uses System.Security.Cryptography or X.509 certificates |
-| `references/extensions-hosting.md` | Project uses Generic Host, BackgroundService, or Microsoft.Extensions.Configuration |
-| `references/serialization-networking.md` | Project uses System.Text.Json, XmlSerializer, HttpClient, or networking APIs |
-| `references/winforms-wpf.md` | Project uses Windows Forms or WPF |
-| `references/containers-interop.md` | Project uses Docker containers, single-file publishing, or native interop (P/Invoke) |
+| `references/csharp-compiler-dotnet9to10.md` | Always (C# 14 compiler breaking changes — field keyword, extension keyword, span overloads) |
+| `references/core-libraries-dotnet9to10.md` | Always (applies to all .NET 10 projects) |
+| `references/sdk-msbuild-dotnet9to10.md` | Always (SDK and build tooling changes) |
+| `references/aspnet-core-dotnet9to10.md` | Project uses ASP.NET Core |
+| `references/efcore-dotnet9to10.md` | Project uses Entity Framework Core or Microsoft.Data.Sqlite |
+| `references/cryptography-dotnet9to10.md` | Project uses System.Security.Cryptography or X.509 certificates |
+| `references/extensions-hosting-dotnet9to10.md` | Project uses Generic Host, BackgroundService, or Microsoft.Extensions.Configuration |
+| `references/serialization-networking-dotnet9to10.md` | Project uses System.Text.Json, XmlSerializer, HttpClient, or networking APIs |
+| `references/winforms-wpf-dotnet9to10.md` | Project uses Windows Forms or WPF |
+| `references/containers-interop-dotnet9to10.md` | Project uses Docker containers, single-file publishing, or native interop (P/Invoke) |
