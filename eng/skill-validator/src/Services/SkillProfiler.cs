@@ -14,6 +14,7 @@ public sealed record SkillProfile(
     bool HasFrontmatter,
     bool HasWhenToUse,
     bool HasWhenNotToUse,
+    bool DescriptionTooLong,
     int ResourceFileCount,
     IReadOnlyList<string> Warnings);
 
@@ -23,6 +24,7 @@ public static partial class SkillProfiler
     private const int TokenSweetLow = 200;
     private const int TokenSweetHigh = 2500;
     private const int TokenWarnHigh = 5000;
+    internal const int MaxDescriptionLength = 1024;
 
     public static SkillProfile AnalyzeSkill(SkillInfo skill)
     {
@@ -80,6 +82,17 @@ public static partial class SkillProfiler
         if (numberedStepCount == 0)
             warnings.Add("No numbered workflow steps — agents follow sequenced procedures more reliably.");
 
+        bool descriptionTooLong = false;
+        if (skill.Description.Length > MaxDescriptionLength)
+        {
+            descriptionTooLong = true;
+            warnings.Add($"Skill description is {skill.Description.Length:N0} characters — maximum is {MaxDescriptionLength:N0}. Shorten the description in SKILL.md frontmatter.");
+        }
+        else if (skill.Description.Length == 0 && hasFrontmatter)
+        {
+            warnings.Add("YAML frontmatter has no description — agents use description for skill discovery.");
+        }
+
         if (!hasFrontmatter)
             warnings.Add("No YAML frontmatter — agents use name/description for skill discovery.");
 
@@ -106,6 +119,7 @@ public static partial class SkillProfiler
             HasFrontmatter: hasFrontmatter,
             HasWhenToUse: hasWhenToUse,
             HasWhenNotToUse: hasWhenNotToUse,
+            DescriptionTooLong: descriptionTooLong,
             ResourceFileCount: resourceFileCount,
             Warnings: warnings);
     }

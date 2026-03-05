@@ -39,10 +39,19 @@ foreach ($dir in $skillDirs) {
     }
 
     $description = $Matches[1]
+
     if ($description -notmatch $DomainGatePattern) {
         Write-Host "❌ $($dir.Name): Description missing domain gate. Must include 'Only activate in MSBuild/.NET build context.'" -ForegroundColor Red
         $errors++
     }
+}
+
+# Delegate description size checks to the central validation script
+$descValidator = Join-Path $RepoRoot '..' 'eng' 'validate-descriptions.ps1'
+if (Test-Path $descValidator) {
+    $pluginsRoot = Join-Path $RepoRoot '..' 'plugins'
+    & pwsh $descValidator -PluginsDir (Resolve-Path $pluginsRoot)
+    if ($LASTEXITCODE -ne 0) { $errors++ }
 }
 
 if ($errors -gt 0) {

@@ -5,11 +5,11 @@ namespace SkillValidator.Tests;
 
 public class AnalyzeSkillTests
 {
-    private static SkillInfo MakeSkill(string content, string name = "test-skill")
+    private static SkillInfo MakeSkill(string content, string name = "test-skill", string description = "Test skill")
     {
         return new SkillInfo(
             Name: name,
-            Description: "Test skill",
+            Description: description,
             Path: "/tmp/test-skill",
             SkillMdPath: "/tmp/test-skill/SKILL.md",
             SkillMdContent: content,
@@ -165,13 +165,41 @@ public class AnalyzeSkillTests
         var profile = SkillProfiler.AnalyzeSkill(skill);
         Assert.DoesNotContain(profile.Warnings, w => w.Contains("mentions skill name"));
     }
+
+    [Fact]
+    public void DescriptionAtLimitProducesNoWarning()
+    {
+        var desc = new string('a', 1024);
+        var content = "---\nname: foo\n---\n# Title\n1. Step\n```bash\necho\n```\n" + new string('x', 4000);
+        var profile = SkillProfiler.AnalyzeSkill(MakeSkill(content, description: desc));
+        Assert.False(profile.DescriptionTooLong);
+        Assert.DoesNotContain(profile.Warnings, w => w.Contains("maximum") || w.Contains("no description"));
+    }
+
+    [Fact]
+    public void DescriptionOverLimitWarnsAndFlags()
+    {
+        var desc = new string('a', 1025);
+        var content = "---\nname: foo\n---\n# Title\n1. Step\n```bash\necho\n```\n" + new string('x', 4000);
+        var profile = SkillProfiler.AnalyzeSkill(MakeSkill(content, description: desc));
+        Assert.True(profile.DescriptionTooLong);
+        Assert.Contains(profile.Warnings, w => w.Contains("maximum"));
+    }
+
+    [Fact]
+    public void EmptyDescriptionWithFrontmatterWarns()
+    {
+        var content = "---\nname: foo\n---\n# Title\n1. Step\n```bash\necho\n```\n" + new string('x', 4000);
+        var profile = SkillProfiler.AnalyzeSkill(MakeSkill(content, description: ""));
+        Assert.Contains(profile.Warnings, w => w.Contains("no description"));
+    }
 }
 
 public class FormatProfileLineTests
 {
-    private static SkillInfo MakeSkill(string content, string name = "test-skill")
+    private static SkillInfo MakeSkill(string content, string name = "test-skill", string description = "Test skill")
     {
-        return new SkillInfo(name, "Test skill", "/tmp/test-skill",
+        return new SkillInfo(name, description, "/tmp/test-skill",
             "/tmp/test-skill/SKILL.md", content, null, null);
     }
 
@@ -189,9 +217,9 @@ public class FormatProfileLineTests
 
 public class FormatDiagnosisHintsTests
 {
-    private static SkillInfo MakeSkill(string content)
+    private static SkillInfo MakeSkill(string content, string description = "Test skill")
     {
-        return new SkillInfo("test-skill", "Test skill", "/tmp/test-skill",
+        return new SkillInfo("test-skill", description, "/tmp/test-skill",
             "/tmp/test-skill/SKILL.md", content, null, null);
     }
 

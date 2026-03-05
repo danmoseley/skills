@@ -211,9 +211,10 @@ public static class ValidateCommand
         if (config.VerdictWarnOnly && !allPassed)
         {
             // In --verdict-warn-only mode, suppress verdict failures except missing_eval
-            // (which is controlled by --require-evals and should remain fatal).
+            // (which is controlled by --require-evals and should remain fatal) and
+            // description_too_long (structural violation that must always block).
             var onlyWarnableFailures = verdicts.All(
-                v => v.Passed || v.FailureKind != "missing_eval");
+                v => v.Passed || (v.FailureKind != "missing_eval" && v.FailureKind != "description_too_long"));
             if (onlyWarnableFailures) return 0;
         }
 
@@ -260,6 +261,20 @@ public static class ValidateCommand
         log($"📊 {SkillProfiler.FormatProfileLine(profile)}");
         foreach (var warning in SkillProfiler.FormatProfileWarnings(profile))
             log(warning);
+
+        if (profile.DescriptionTooLong)
+        {
+            return new SkillVerdict
+            {
+                SkillName = skill.Name,
+                SkillPath = skill.Path,
+                Passed = false,
+                Scenarios = [],
+                OverallImprovementScore = 0,
+                Reason = $"Skill description exceeds maximum length ({skill.Description.Length:N0} characters). Limit: {SkillProfiler.MaxDescriptionLength:N0}.",
+                FailureKind = "description_too_long",
+            };
+        }
 
         // Launch overfitting check in parallel with scenario execution
         var workDir = Path.GetTempPath();
