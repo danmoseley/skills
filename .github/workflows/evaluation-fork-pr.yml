@@ -221,6 +221,28 @@ jobs:
             -f description="$DESC" \
             -f target_url="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
 
+      - name: Download result artifacts
+        if: needs.run-evaluation.result == 'failure'
+        uses: actions/download-artifact@v8
+        with:
+          pattern: skill-validator-results-*
+          path: all-results/
+          merge-multiple: false
+        continue-on-error: true
+
+      - name: Extract error details
+        if: needs.run-evaluation.result == 'failure'
+        run: |
+          for f in $(find all-results/ -name results.json 2>/dev/null); do
+            jq -r '.verdicts[]? | select(.passed == false and .failureKind != null) | "- **\(.skillName)**: \(.reason)"' "$f" 2>/dev/null >> /tmp/error-details.txt || true
+          done
+          if [[ -s /tmp/error-details.txt ]]; then
+            echo "Extracted error details:"
+            cat /tmp/error-details.txt
+          else
+            echo "No error details found in result artifacts"
+          fi
+
       - name: Post completion comment
         continue-on-error: true
         env:
@@ -242,10 +264,21 @@ jobs:
             exit 0
           fi
 
-          # Handle failure — always post, no table check needed
+          # Handle failure — include error details from results when available
           if [[ "$EVAL_RESULT" != "success" ]]; then
-            BODY="❌ Evaluation failed. [View workflow run](${RUN_URL})"
-            gh api "repos/${{ github.repository }}/issues/${PR_NUMBER}/comments" -X POST -f body="$BODY"
+            if [[ -s /tmp/error-details.txt ]]; then
+              {
+                echo "❌ Evaluation failed."
+                echo ""
+                cat /tmp/error-details.txt
+                echo ""
+                echo "[View workflow run](${RUN_URL})"
+              } > /tmp/failure-comment.md
+              gh api "repos/${{ github.repository }}/issues/${PR_NUMBER}/comments" -X POST -F "body=@/tmp/failure-comment.md"
+            else
+              BODY="❌ Evaluation failed. [View workflow run](${RUN_URL})"
+              gh api "repos/${{ github.repository }}/issues/${PR_NUMBER}/comments" -X POST -f body="$BODY"
+            fi
             exit 0
           fi
 
