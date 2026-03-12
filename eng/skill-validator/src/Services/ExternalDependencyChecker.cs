@@ -25,10 +25,30 @@ public static partial class ExternalDependencyChecker
     };
 
     /// <summary>
-    /// Check a skill for structural external dependencies: scripts, tool references.
-    /// Returns advisory messages for human review.
+    /// Load an allowlist file. Lines starting with # are comments, blank lines are ignored.
+    /// Keys are case-insensitive and use the format type:name:detail.
     /// </summary>
-    public static IReadOnlyList<string> CheckSkill(SkillInfo skill)
+    public static IReadOnlySet<string> LoadAllowList(string path)
+    {
+        if (!File.Exists(path))
+            return new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        var entries = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var rawLine in File.ReadAllLines(path))
+        {
+            var line = rawLine.Trim();
+            if (line.Length == 0 || line[0] == '#')
+                continue;
+            entries.Add(line);
+        }
+        return entries;
+    }
+
+    /// <summary>
+    /// Check a skill for structural external dependencies: scripts, tool references.
+    /// Returns advisory messages for human review. Entries matching the allowlist are skipped.
+    /// </summary>
+    public static IReadOnlyList<string> CheckSkill(SkillInfo skill, IReadOnlySet<string>? allowed = null)
     {
         var errors = new List<string>();
 
@@ -41,8 +61,10 @@ public static partial class ExternalDependencyChecker
                 var ext = Path.GetExtension(file);
                 if (ScriptExtensions.Contains(ext))
                 {
-                    var relativePath = Path.GetRelativePath(skill.Path, file);
-                    errors.Add($"Script file '{relativePath}' — review needed: skills should generally not bundle executable scripts. Verify this is intentional.");
+                    var relativePath = Path.GetRelativePath(skill.Path, file).Replace('\\', '/');
+                    var key = $"script:{skill.Name}:{relativePath}";
+                    if (allowed?.Contains(key) != true)
+                        errors.Add($"Script file '{relativePath}' — review needed: skills should generally not bundle executable scripts. Verify this is intentional. (allow: {key})");
                 }
             }
         }
@@ -50,7 +72,9 @@ public static partial class ExternalDependencyChecker
         // 2. INVOKES pattern in description (references external scripts)
         if (InvokesScriptRegex().IsMatch(skill.Description))
         {
-            errors.Add("Description references an invoked script — review needed: skills should generally not depend on external scripts. Verify this is intentional.");
+            var key = $"invokes:{skill.Name}";
+            if (allowed?.Contains(key) != true)
+                errors.Add($"Description references an invoked script — review needed: skills should generally not depend on external scripts. Verify this is intentional. (allow: {key})");
         }
 
         // 3. Non-built-in tool references (#tool:...) in body
@@ -58,7 +82,11 @@ public static partial class ExternalDependencyChecker
         {
             var toolName = match.Value[6..]; // strip "#tool:" prefix
             if (!BuiltInTools.Contains(toolName))
-                errors.Add($"Tool reference '{match.Value}' — review needed: verify this non-built-in tool reference is intentional.");
+            {
+                var key = $"tool-ref:{skill.Name}:{match.Value}";
+                if (allowed?.Contains(key) != true)
+                    errors.Add($"Tool reference '{match.Value}' — review needed: verify this non-built-in tool reference is intentional. (allow: {key})");
+            }
         }
 
         return errors;
@@ -66,9 +94,9 @@ public static partial class ExternalDependencyChecker
 
     /// <summary>
     /// Check an agent for structural external dependencies: tool references, non-built-in tools.
-    /// Returns advisory messages for human review.
+    /// Returns advisory messages for human review. Entries matching the allowlist are skipped.
     /// </summary>
-    public static IReadOnlyList<string> CheckAgent(AgentInfo agent)
+    public static IReadOnlyList<string> CheckAgent(AgentInfo agent, IReadOnlySet<string>? allowed = null)
     {
         var errors = new List<string>();
 
@@ -77,7 +105,11 @@ public static partial class ExternalDependencyChecker
         {
             var toolName = match.Value[6..]; // strip "#tool:" prefix
             if (!BuiltInTools.Contains(toolName))
-                errors.Add($"Tool reference '{match.Value}' — review needed: verify this non-built-in tool reference is intentional.");
+            {
+                var key = $"tool-ref:{agent.Name}:{match.Value}";
+                if (allowed?.Contains(key) != true)
+                    errors.Add($"Tool reference '{match.Value}' — review needed: verify this non-built-in tool reference is intentional. (allow: {key})");
+            }
         }
 
         // 2. Non-built-in tools in frontmatter tools array
@@ -87,7 +119,9 @@ public static partial class ExternalDependencyChecker
             {
                 if (!BuiltInTools.Contains(tool))
                 {
-                    errors.Add($"Non-built-in tool '{tool}' in tools list — review needed: verify this tool is intentional and available in the target environment.");
+                    var key = $"agent-tool:{agent.Name}:{tool}";
+                    if (allowed?.Contains(key) != true)
+                        errors.Add($"Non-built-in tool '{tool}' in tools list — review needed: verify this tool is intentional and available in the target environment. (allow: {key})");
                 }
             }
         }
@@ -97,9 +131,9 @@ public static partial class ExternalDependencyChecker
 
     /// <summary>
     /// Check a plugin for MCP server declarations.
-    /// Returns advisory messages for human review.
+    /// Returns advisory messages for human review. Entries matching the allowlist are skipped.
     /// </summary>
-    public static IReadOnlyList<string> CheckPlugin(PluginInfo plugin)
+    public static IReadOnlyList<string> CheckPlugin(PluginInfo plugin, IReadOnlySet<string>? allowed = null)
     {
         var errors = new List<string>();
 
@@ -127,7 +161,9 @@ public static partial class ExternalDependencyChecker
             {
                 foreach (var prop in serversEl.EnumerateObject())
                 {
-                    errors.Add($"MCP server '{prop.Name}' — review needed: verify this MCP server dependency is intentional and necessary.");
+                    var key = $"mcp-server:{plugin.Name}:{prop.Name}";
+                    if (allowed?.Contains(key) != true)
+                        errors.Add($"MCP server '{prop.Name}' — review needed: verify this MCP server dependency is intentional and necessary. (allow: {key})");
                 }
             }
         }

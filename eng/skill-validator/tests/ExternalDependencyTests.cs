@@ -30,17 +30,16 @@ public class ExternalDependencyCheckerTests
         return new AgentInfo(name, description, "/tmp/agents/test-agent.agent.md", content, "test-agent.agent.md", tools);
     }
 
-    private static (PluginInfo Plugin, string Dir) MakePlugin(string? extraJson = null)
+    private static (PluginInfo Plugin, string Dir) MakePlugin(string name = "test-plugin", string? extraJson = null)
     {
         var dir = Path.Combine(Path.GetTempPath(), "dep-plugin-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(dir);
         Directory.CreateDirectory(Path.Combine(dir, "skills"));
-        var dirName = Path.GetFileName(dir);
 
-        var json = extraJson ?? $@"{{""name"":""{dirName}"",""version"":""0.1.0"",""description"":""Test."",""skills"":""./skills/""}}";
+        var json = extraJson ?? $@"{{""name"":""{name}"",""version"":""0.1.0"",""description"":""Test."",""skills"":""./skills/""}}";
         File.WriteAllText(Path.Combine(dir, "plugin.json"), json);
 
-        var plugin = new PluginInfo(dirName, "0.1.0", "Test.", "./skills/", null, dir, dirName);
+        var plugin = new PluginInfo(name, "0.1.0", "Test.", "./skills/", null, dir, Path.GetFileName(dir));
         return (plugin, dir);
     }
 
@@ -269,6 +268,114 @@ public class ExternalDependencyCheckerTests
             File.WriteAllText(Path.Combine(dir, "plugin.json"), json);
 
             var errors = ExternalDependencyChecker.CheckPlugin(plugin);
+            Assert.Empty(errors);
+        }
+        finally { Cleanup(dir); }
+    }
+
+    // ========================================
+    // Allowlist: LoadAllowList
+    // ========================================
+
+    [Fact]
+    public void LoadAllowList_MissingFile_ReturnsEmpty()
+    {
+        var allowed = ExternalDependencyChecker.LoadAllowList("/nonexistent/path.txt");
+        Assert.Empty(allowed);
+    }
+
+    [Fact]
+    public void LoadAllowList_ParsesEntriesAndSkipsComments()
+    {
+        var path = Path.Combine(Path.GetTempPath(), "allowlist-" + Guid.NewGuid().ToString("N") + ".txt");
+        try
+        {
+            File.WriteAllText(path, "# comment\n\nscript:my-skill:scripts/foo.ps1\ntool-ref:my-agent:#tool:web/fetch\n");
+            var allowed = ExternalDependencyChecker.LoadAllowList(path);
+            Assert.Equal(2, allowed.Count);
+            Assert.Contains("script:my-skill:scripts/foo.ps1", allowed);
+            Assert.Contains("tool-ref:my-agent:#tool:web/fetch", allowed);
+        }
+        finally { File.Delete(path); }
+    }
+
+    [Fact]
+    public void LoadAllowList_IsCaseInsensitive()
+    {
+        var path = Path.Combine(Path.GetTempPath(), "allowlist-" + Guid.NewGuid().ToString("N") + ".txt");
+        try
+        {
+            File.WriteAllText(path, "Script:My-Skill:scripts/Foo.ps1\n");
+            var allowed = ExternalDependencyChecker.LoadAllowList(path);
+            Assert.Contains("script:my-skill:scripts/foo.ps1", allowed);
+        }
+        finally { File.Delete(path); }
+    }
+
+    // ========================================
+    // Allowlist: filtering
+    // ========================================
+
+    [Fact]
+    public void Skill_WithAllowedScript_NoError()
+    {
+        var skill = MakeSkill();
+        try
+        {
+            var scriptsDir = Path.Combine(skill.Path, "scripts");
+            Directory.CreateDirectory(scriptsDir);
+            File.WriteAllText(Path.Combine(scriptsDir, "setup.ps1"), "# setup");
+
+            var allowed = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+            {
+                "script:test-skill:scripts/setup.ps1"
+            };
+            var errors = ExternalDependencyChecker.CheckSkill(skill, allowed);
+            Assert.Empty(errors);
+        }
+        finally { Cleanup(Directory.GetParent(skill.Path)!.FullName); }
+    }
+
+    [Fact]
+    public void Agent_WithAllowedToolRef_NoError()
+    {
+        var content = "---\nname: test-agent\ndescription: A test agent.\n---\n# Test\nUse `#tool:web/fetch` here.\n";
+        var agent = MakeAgent(content: content);
+        var allowed = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "tool-ref:test-agent:#tool:web/fetch"
+        };
+        var errors = ExternalDependencyChecker.CheckAgent(agent, allowed);
+        Assert.Empty(errors);
+    }
+
+    [Fact]
+    public void Agent_WithPartiallyAllowedTools_FlagsUnallowed()
+    {
+        var agent = MakeAgent(tools: new[] { "custom_a", "custom_b" });
+        var allowed = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "agent-tool:test-agent:custom_a"
+        };
+        var errors = ExternalDependencyChecker.CheckAgent(agent, allowed);
+        Assert.Single(errors);
+        Assert.Contains("custom_b", errors[0]);
+    }
+
+    [Fact]
+    public void Plugin_WithAllowedMcpServer_NoError()
+    {
+        var (plugin, dir) = MakePlugin();
+        try
+        {
+            var json = $@"{{""name"":""{plugin.Name}"",""version"":""0.1.0"",""description"":""Test."",""skills"":""./skills/"",""mcpServers"":{{""my-server"":{{""command"":""node""}}}}}}";
+            File.WriteAllText(Path.Combine(dir, "plugin.json"), json);
+
+            var allowed = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+            {
+                "mcp-server:test-plugin:my-server"
+            };
+            var errors = ExternalDependencyChecker.CheckPlugin(plugin, allowed);
             Assert.Empty(errors);
         }
         finally { Cleanup(dir); }
