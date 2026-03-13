@@ -77,7 +77,7 @@ public static partial class ExternalDependencyChecker
                 findings.Add($"Description references an invoked script — review needed: skills should generally not depend on external scripts. Verify this is intentional. (allow: {key})");
         }
 
-        // 3. Non-built-in tool references (#tool:...) in body — deduplicate by key
+        // 3. Non-built-in tool references (#tool:...) in content (including frontmatter) — deduplicate by key
         var seenKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         foreach (Match match in ToolReferenceRegex().Matches(skill.SkillMdContent))
         {
@@ -101,7 +101,7 @@ public static partial class ExternalDependencyChecker
     {
         var findings = new List<string>();
 
-        // 1. Non-built-in tool references (#tool:...) in body — deduplicate by key
+        // 1. Non-built-in tool references (#tool:...) in content (including frontmatter) — deduplicate by key
         var seenKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         foreach (Match match in ToolReferenceRegex().Matches(agent.AgentMdContent))
         {
