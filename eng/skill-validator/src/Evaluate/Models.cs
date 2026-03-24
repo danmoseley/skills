@@ -242,6 +242,8 @@ public sealed class ScenarioComparison
     public SubagentActivationInfo? SubagentActivationIsolated { get; set; }
     public SubagentActivationInfo? SubagentActivationPlugin { get; set; }
     public bool TimedOut { get; set; }
+    /// <summary>The scenario timeout in seconds (from eval.yaml or the 120s default).</summary>
+    public int TimeoutSeconds { get; set; } = 120;
     /// <summary>When false, non-activation is expected (negative test) and should not flag the verdict.</summary>
     public bool ExpectActivation { get; set; } = true;
 

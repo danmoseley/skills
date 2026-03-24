@@ -168,7 +168,7 @@ public static class Reporter
         if (anyTimeout)
         {
             Console.WriteLine();
-            Console.WriteLine("{Ansi.Yellow}⏰ timeout — run hit the scenario timeout limit; scoring may be impacted by aborting model execution before it could produce its full output{Ansi.Reset}");
+            Console.WriteLine("{Ansi.Yellow}⏰ timeout — run hit the scenario timeout limit; scoring may be impacted by aborting model execution before it could produce its full output (increase via 'timeout' in eval.yaml; default: 120s){Ansi.Reset}");
         }
 
         Console.WriteLine();
@@ -229,7 +229,7 @@ public static class Reporter
             if (b.TimedOut) parts.Add("baseline");
             if (s.TimedOut) parts.Add("isolated");
             if (p?.TimedOut == true) parts.Add("plugin");
-            Console.WriteLine($"      {Ansi.BoldRed}⏰ TIMEOUT{Ansi.Reset} — {string.Join(" and ", parts)} run(s) hit the scenario timeout limit");
+            Console.WriteLine($"      {Ansi.BoldRed}⏰ TIMEOUT{Ansi.Reset} — {string.Join(" and ", parts)} run(s) hit the {scenario.TimeoutSeconds}s scenario timeout limit (increase via 'timeout' in eval.yaml)");
         }
 
         foreach (var (label, baseline, isolated, plugin) in metricRows)
@@ -570,7 +570,7 @@ public static class Reporter
         bool anyTimeout = verdicts.Any(v => v.Scenarios.Any(s =>
             (s.Baseline?.Metrics?.TimedOut == true) || (s.SkilledIsolated?.Metrics?.TimedOut == true) || (s.SkilledPlugin?.Metrics?.TimedOut == true)));
         if (anyTimeout)
-            sb.AppendLine("\n> ⏰ **timeout** — run hit the scenario timeout limit; scoring may be impacted by aborting model execution before it could produce its full output");
+            sb.AppendLine("\n> ⏰ **timeout** — run hit the scenario timeout limit; scoring may be impacted by aborting model execution before it could produce its full output (increase via `timeout` in eval.yaml; default: 120s)");
 
         // Noise test results
         var withNoise = verdicts.Where(v => v.NoiseTestResult is not null).ToList();
