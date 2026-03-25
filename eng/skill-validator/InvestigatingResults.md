@@ -10,7 +10,7 @@ If you need to run the investigation manually, follow the [Quick start](#quick-s
 
 ## Quick start
 
-1. **Download the results artifact:** `gh run download <run-id> --repo dotnet/skills --dir <path>`
+1. **Download the results artifact:** `gh run download <run-id> --repo dotnet/skills --pattern "skill-validator-results-*" --dir <path>`
 2. **Read `summary.md` first** for a quick overview of which scenarios passed/failed
 3. **Read `results.json`** for the full metrics, agent output, assertions, and judge reasoning
 4. **Identify the failure pattern** using the categories below — most failures match multiple patterns; fix them in priority order (timeouts first, then activation, then quality/rubric issues)
@@ -23,10 +23,12 @@ If you need to run the investigation manually, follow the [Quick start](#quick-s
 Extract the workflow run ID from the **Full results** link in the PR eval comment (e.g., `https://github.com/dotnet/skills/actions/runs/23520818616` → `23520818616`), then:
 
 ```bash
-gh run download <run-id> --repo dotnet/skills --dir /tmp/eval-results
+gh run download <run-id> --repo dotnet/skills --pattern "skill-validator-results-*" --dir ./eval-results
 ```
 
-This downloads all artifacts into subdirectories, each containing `results.json` and `summary.md`.
+This downloads all result artifacts into subdirectories, each containing `results.json` and `summary.md`.
+
+> **Note:** The `--pattern` flag is important — without it, `gh` will attempt to download all workflow artifacts including non-zip files (e.g., `.tar.gz`), which causes an extraction error and a non-zero exit code even though the eval results download successfully.
 
 ### Via browser
 
@@ -77,7 +79,9 @@ Each scenario includes two required runs (baseline + isolated). It may also incl
 | `isolatedBreakdown` | Per-metric contribution to the score (see below) |
 | `pluginBreakdown` | Per-metric contribution to the score (see below); optional and only populated when a plugin run is present |
 | `pairwiseResult` | Judge's rubric-by-rubric comparison |
-| `perRunScores` | Individual run scores (shows variance) |
+| `perRunScores` | Per-run improvement scores as a flat array of numbers (one per run); each value is `min(isolated, plugin)` for that run, showing variance across runs |
+
+> **Note:** Scenarios do not have a `passed` field. To determine pass/fail for an individual scenario, check whether `isolatedImprovementScore` and `pluginImprovementScore` are both non-negative. The `passed` field exists only at the verdict level (per-skill).
 
 ### Breakdown fields
 
@@ -111,6 +115,8 @@ Each of `baseline`, `skilledIsolated`, and `skilledPlugin` contains a `metrics` 
 | `errorCount` | Number of errors during the run |
 | `assertionResults[]` | Per-assertion pass/fail with messages |
 | `agentOutput` | The agent's final text output |
+
+> **Note:** The quality scores shown in the summary table (e.g., "4.0/5") come from `baseline.judgeResult.overallScore`, `skilledIsolated.judgeResult.overallScore`, etc. — they are on the run result object, not inside `metrics`. When parsing `results.json`, look for `judgeResult.overallScore` alongside `metrics` on each run.
 
 ## Common failure patterns
 
@@ -244,17 +250,29 @@ def analyze(path):
     with open(path) as f:
         data = json.load(f)
     for verdict in data['verdicts']:
+        print(f"=== {verdict['skillName']} (passed={verdict['passed']}) ===")
         for scenario in verdict['scenarios']:
             name = scenario['scenarioName']
-            bl = scenario['baseline']['metrics']
-            sk = scenario['skilledIsolated']['metrics']
-            print(f"--- {name} ---")
-            print(f"  Baseline: timedOut={bl['timedOut']}, output={len(bl.get('agentOutput',''))} chars")
-            print(f"  Skilled:  timedOut={sk['timedOut']}, output={len(sk.get('agentOutput',''))} chars")
-            print(f"  Improvement: {scenario.get('isolatedImprovementScore', 0):.1%}")
-            for a in bl.get('assertionResults', []):
+            bl_metrics = scenario['baseline']['metrics']
+            sk_metrics = scenario['skilledIsolated']['metrics']
+            bl_quality = scenario['baseline'].get('judgeResult', {}).get('overallScore', '?')
+            sk_quality = scenario['skilledIsolated'].get('judgeResult', {}).get('overallScore', '?')
+            iso_score = scenario.get('isolatedImprovementScore', 0)
+            print(f"\n--- {name} ---")
+            print(f"  Quality: baseline={bl_quality}/5, skilled={sk_quality}/5")
+            print(f"  Baseline: timedOut={bl_metrics['timedOut']}, tokens={bl_metrics.get('tokenEstimate', 0)}")
+            print(f"  Skilled:  timedOut={sk_metrics['timedOut']}, tokens={sk_metrics.get('tokenEstimate', 0)}")
+            print(f"  Improvement: {iso_score:.1%}")
+
+            # perRunScores is a flat list of numbers (one per run)
+            per_run = scenario.get('perRunScores', [])
+            if per_run:
+                formatted = ', '.join(f'{s:.2f}' for s in per_run)
+                print(f"  Per-run scores: [{formatted}]")
+
+            for a in sk_metrics.get('assertionResults', []):
                 status = 'PASS' if a['passed'] else 'FAIL'
-                print(f"  Baseline assertion [{status}]: {a['message']}")
+                print(f"  Assertion [{status}]: {a['message']}")
 
 analyze('results.json')
 ```
