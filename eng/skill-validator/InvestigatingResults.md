@@ -79,9 +79,9 @@ Each scenario includes two required runs (baseline + isolated). It may also incl
 | `isolatedBreakdown` | Per-metric contribution to the score (see below) |
 | `pluginBreakdown` | Per-metric contribution to the score (see below); optional and only populated when a plugin run is present |
 | `pairwiseResult` | Judge's rubric-by-rubric comparison |
-| `perRunScores` | Per-run improvement scores as a flat array of numbers (one per run); each value is `min(isolated, plugin)` for that run, showing variance across runs |
+| `perRunScores` | Per-run improvement scores as a flat array of numbers (one per run); when a plugin run is present, each value is `min(isolated, plugin)` for that run; when no plugin run is present (`skilledPlugin` is null), each value is the isolated improvement score for that run |
 
-> **Note:** Scenarios do not have a `passed` field. To determine pass/fail for an individual scenario, check whether `isolatedImprovementScore` and `pluginImprovementScore` are both non-negative. The `passed` field exists only at the verdict level (per-skill).
+> **Note:** Scenarios do not have a `passed` field. To determine pass/fail for an individual scenario, check whether `improvementScore >= 0` (this field is already the effective score — the min of isolated and plugin when both exist). The `passed` field exists only at the verdict level (per-skill).
 
 ### Breakdown fields
 
