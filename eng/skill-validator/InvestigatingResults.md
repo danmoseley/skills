@@ -257,12 +257,12 @@ def analyze(path):
             sk_metrics = scenario['skilledIsolated']['metrics']
             bl_quality = scenario['baseline'].get('judgeResult', {}).get('overallScore', '?')
             sk_quality = scenario['skilledIsolated'].get('judgeResult', {}).get('overallScore', '?')
-            iso_score = scenario.get('isolatedImprovementScore', 0)
+            improvement = scenario.get('improvementScore', 0)
             print(f"\n--- {name} ---")
             print(f"  Quality: baseline={bl_quality}/5, skilled={sk_quality}/5")
             print(f"  Baseline: timedOut={bl_metrics['timedOut']}, tokens={bl_metrics.get('tokenEstimate', 0)}")
             print(f"  Skilled:  timedOut={sk_metrics['timedOut']}, tokens={sk_metrics.get('tokenEstimate', 0)}")
-            print(f"  Improvement: {iso_score:.1%}")
+            print(f"  Improvement: {improvement:.1%}")
 
             # perRunScores is a flat list of numbers (one per run)
             per_run = scenario.get('perRunScores', [])
