@@ -93,9 +93,10 @@ jobs:
           # Skill-validator changes need evaluation. Workflow YAML changes don't
           # require /evaluate because the issue_comment trigger always runs from
           # main anyway — workflow changes are only effective after merge.
-          # InvestigatingResults.md is documentation only and doesn't affect evaluation.
+          # InvestigatingResults.md and README.md are documentation only and don't affect evaluation.
+          $docOnlyFiles = @('eng/skill-validator/InvestigatingResults.md', 'eng/skill-validator/README.md')
           $hasInfraChanges = $changedFiles |
-            Where-Object { $_ -match '^eng/skill-validator/' -and $_ -ne 'eng/skill-validator/InvestigatingResults.md' } |
+            Where-Object { $_ -match '^eng/skill-validator/' -and $_ -notin $docOnlyFiles } |
             Select-Object -First 1
 
           if ($hasSkillChanges -or $hasInfraChanges) {
@@ -155,8 +156,9 @@ jobs:
             Where-Object { $_ -match '^(plugins/[^/]+/skills|tests/[^/]+)/[^/]+/' } |
             Select-Object -First 1
 
+          $docOnlyFiles = @('eng/skill-validator/InvestigatingResults.md', 'eng/skill-validator/README.md')
           $hasInfraChanges = $changedFiles |
-            Where-Object { $_ -match '^eng/skill-validator/' -and $_ -ne 'eng/skill-validator/InvestigatingResults.md' } |
+            Where-Object { $_ -match '^eng/skill-validator/' -and $_ -notin $docOnlyFiles } |
             Select-Object -First 1
 
           if ($hasSkillChanges -or $hasInfraChanges) {
@@ -349,8 +351,10 @@ jobs:
             $changedFiles = git diff --name-only --diff-filter=ACMR $mergeBase $head
 
             # Check if any changed files are in infrastructure paths
+            # InvestigatingResults.md and README.md are documentation only and don't affect evaluation.
+            $docOnlyFiles = @('eng/skill-validator/InvestigatingResults.md', 'eng/skill-validator/README.md')
             $hasInfraChanges = $changedFiles |
-              Where-Object { $_ -match '^(\.github/workflows/evaluation\.yml$|eng/skill-validator/)' } |
+              Where-Object { $_ -match '^(\.github/workflows/evaluation\.yml$|eng/skill-validator/)' -and $_ -notin $docOnlyFiles } |
               Select-Object -First 1
 
             if ($hasInfraChanges) {
