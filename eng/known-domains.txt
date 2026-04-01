@@ -16,10 +16,13 @@ microsoft.com
 modelcontextprotocol.io
 
 # Tools
-aka.ms
+aka.ms/dotnet-trace
+aka.ms/perfcollect
+api.nuget.org
 download.sysinternals.com
 msdl.microsoft.com
-nuget.org
+www.nuget.org/account/trustedpublishing
+## nugettest is Microsoft owned
 nugettest.org
 dotnetcli.blob.core.windows.net
 
@@ -57,12 +60,9 @@ github.com/yourusername
 github.com/username
 
 # Community
-fluentassertions.com
-npmjs.com/package/@modelcontextprotocol
 ollama.com
 stackoverflow.com
+## Cannot pin npmjs package by hash, only version
+www.npmjs.com/package/@modelcontextprotocol/inspector/v/0.21.1
 xunit.net
-
-# UI helpers
-speedscope.app
 
