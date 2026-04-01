@@ -21,9 +21,7 @@ aka.ms/perfcollect
 api.nuget.org
 download.sysinternals.com
 msdl.microsoft.com
-www.nuget.org/account/trustedpublishing
-## nugettest is Microsoft owned
-nugettest.org
+nuget.org/account/trustedpublishing
 dotnetcli.blob.core.windows.net
 
 # Platforms
@@ -63,6 +61,5 @@ github.com/username
 ollama.com
 stackoverflow.com
 ## Cannot pin npmjs package by hash, only version
-www.npmjs.com/package/@modelcontextprotocol/inspector/v/0.21.1
+npmjs.com/package/@modelcontextprotocol/inspector/v/0.21.1
 xunit.net
-
